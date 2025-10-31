@@ -32,7 +32,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'clinic_queue_system.urls'
+ROOT_URLCONF = 'queue_system.urls'
 
 TEMPLATES = [
     {

@@ -6,7 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'clinic_queue_system.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'queue_system.settings')
     
     # Add the project root to Python path
     project_root = os.path.dirname(os.path.abspath(__file__))
