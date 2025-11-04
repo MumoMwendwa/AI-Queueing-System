@@ -3,7 +3,7 @@
 A Django-based intelligent queue management system for hospitals with AI-powered features.
 
 ## Project Structure
-- `clinic_queue_system/` - Django project configuration
+- `queue_system/` - Django project configuration
 - `queue_app/` - Main application with AI features
 - `static/` - CSS, JS, and images
 - `templates/` - HTML templates
