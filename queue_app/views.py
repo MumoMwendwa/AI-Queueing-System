@@ -37,7 +37,13 @@ def home(request):
             'current_ticket': in_consultation_ticket, # This is the main piece of data you needed!
             'waiting_list': waiting_tickets,
         })
-        
+        patient = Patient.objects.first() 
+        if not patient:
+            patient = Patient.objects.create(
+                first_name="Eren",
+                last_name="Yeager",
+                patient_id="123456"
+            )
     # 4. Create the context dictionary
     context = {
         'departments': department_data,
@@ -49,14 +55,16 @@ def home(request):
     return render(request, 'base.html', context)
 
 def patient_dashboard(request, patient_id):
+    patient = Patient.objects.get(pk=patient_id)
     # Logic for patient dashboard view
-    return render(request, 'patient/dashboard.html')
+    return render(request, 'patient/dashboard.html', {'patient': patient})
 def patient_register(request):
     # Logic for patient registration view
     return render(request, 'patient/register.html')
 def patient_virtual_card(request, patient_id):
+    patient = Patient.objects.get(pk=patient_id)
     # Logic for patient virtual card view
-    return render(request, 'patient/virtual_card.html')
+    return render(request, 'patient/virtual_card.html', {'patient': patient})
 
 
 # Your ViewSets remain unchanged:

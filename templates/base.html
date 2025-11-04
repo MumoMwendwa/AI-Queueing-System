@@ -21,28 +21,15 @@
     <!-- Navigation -->
     <nav class="nav-bar">
         <ul class="nav-items">
-            <li><a href="{% url 'patient_dashboard' patient.patient_id %}">Dashboard</a></li>
+            {% if patient %}
+            <li><a href="{% url 'patient_dashboard' patient.id %}">Dashboard</a></li>
+            <li><a href="{% url 'patient_virtual_card' patient.id %}">Virtual Card</a></li>
+            {% else %}
             <li><a href="{% url 'patient_register' %}">Register</a></li>
-            <li><a href="{% url 'patient_virtual_card' patient.patient_id %}">Virtual Card</a></li>
+            {% endif %}
         </ul>
     </nav>
     <!-- End Navigation -->
-
-    <!--Navigation-->
-    <nav class="nav-bar">
-        <ul class="nav-items">
-             {% if patient %}
-    <li>
-        <a href="{% url 'patient_dashboard' patient.patient_id %}">Dashboard</a>
-    </li>
-    <li>
-        <a href="{% url 'patient_virtual_card' patient.patient_id %}">Virtual Card</a>
-    </li>
-{% else %}
-     <li><a href="{% url 'patient_register' %}">Register</a></li>
-{% endif %}
-        </ul>
-    </nav>
    
     <!-- Main Content -->
     <main class="dashboard-container">
