@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Patient Registration - AI Queueing Clinic System{% endblock %}
+
+{% block content %}
+<div class="patient-dashboard">
+    <div class="card">
+        <div class="card-header text-center">
+            <h1 class="card-title">👤 New Patient Registration</h1>
+            <p>Welcome! Let's get you registered in our system quickly and easily.</p>
+        </div>
+
+        <!-- Registration Form -->
+        <form method="POST" action="{% url 'patient_register' %}" style="max-width: 600px; margin: 0 auto;">
+            {% csrf_token %}
+            
+            <!-- Personal Information -->
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--baby-blue-dark);">Personal Information</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name *</label>
+                        <input type="text" name="first_name" required style="width: 100%;" 
+                               placeholder="Enter your first name">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name *</label>
+                        <input type="text" name="last_name" required style="width: 100%;" 
+                               placeholder="Enter your last name">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Date of Birth *</label>
+                        <input type="date" name="date_of_birth" required style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phone Number *</label>
+                        <input type="tel" name="phone" required style="width: 100%;" 
+                               placeholder="+1 (555) 123-4567">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email Address *</label>
+                    <input type="email" name="email" required style="width: 100%;" 
+                           placeholder="your.email@example.com">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Home Address *</label>
+                    <textarea name="address" required style="width: 100%; min-height: 80px;" 
+                              placeholder="Enter your complete address"></textarea>
+                </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--baby-blue-dark);">Emergency Contact</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Contact Name *</label>
+                        <input type="text" name="emergency_contact" required style="width: 100%;" 
+                               placeholder="Full name of emergency contact">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Relationship *</label>
+                        <input type="text" name="relationship" required style="width: 100%;" 
+                               placeholder="Spouse, Parent, Friend, etc.">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Information -->
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--baby-blue-dark);">Medical Information</h3>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        Describe Your Symptoms *
+                    </label>
+                    <textarea name="symptoms" required style="width: 100%; min-height: 120px;" 
+                              placeholder="Please describe your symptoms in detail. Include when they started, severity, and any other relevant information."></textarea>
+                </div>
+
+                <!-- AI Triage Analysis Section -->
+                <div id="ai-triage-section" style="display: none; margin-bottom: 1rem;">
+                    <div class="ai-recommendations">
+                        <h4 style="margin-bottom: 0.5rem;">🤖 AI Triage Analysis</h4>
+                        <div id="triage-result">
+                            <!-- AI analysis will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Blood Type</label>
+                        <select name="blood_type" style="width: 100%;">
+                            <option value="">Select blood type</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Known Allergies</label>
+                        <input type="text" name="allergies" style="width: 100%;" 
+                               placeholder="List any allergies (if none, leave blank)">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Existing Medical Conditions</label>
+                    <input type="text" name="existing_conditions" style="width: 100%;" 
+                           placeholder="Any chronic conditions or previous diagnoses">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Current Medications</label>
+                    <input type="text" name="current_medications" style="width: 100%;" 
+                           placeholder="List medications you're currently taking">
+                </div>
+            </div>
+
+            <!-- Terms and Submit -->
+            <div style="margin-bottom: 2rem;">
+                <label style="display: flex; align-items: start; gap: 0.5rem;">
+                    <input type="checkbox" required style="margin-top: 0.25rem;">
+                    <span>
+                        I agree to the <a href="#terms" style="color: var(--baby-blue-dark);">terms and conditions</a> 
+                        and consent to the use of my medical information for treatment purposes. 
+                        I understand that AI will be used to assist in triage and treatment recommendations.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button type="button" class="btn" onclick="analyzeSymptoms()" id="analyze-btn">
+                    🔍 Analyze Symptoms with AI
+                </button>
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                    ✅ Complete Registration & Get Virtual Card
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Existing Patient Section -->
+    <div class="card text-center">
+        <h3 class="card-title">Already Have a Virtual Card?</h3>
+        <p>If you're already registered in our system, you can check in quickly with your virtual card.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+            <a href="#scan-qr" class="btn btn-primary">📱 Scan QR Code</a>
+            <a href="#manual-checkin" class="btn">🔢 Manual Check-in</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function analyzeSymptoms() {
+        const symptomsText = document.querySelector('textarea[name="symptoms"]').value;
+        const analyzeBtn = document.getElementById('analyze-btn');
+        
+        if (!symptomsText.trim()) {
+            alert('Please describe your symptoms first.');
+            return;
+        }
+
+        // Show loading state
+        analyzeBtn.innerHTML = '🔄 Analyzing...';
+        analyzeBtn.disabled = true;
+
+        // Call AI triage API
+        fetch('/api/ai/triage/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ symptoms: symptomsText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Show AI analysis results
+            const triageSection = document.getElementById('ai-triage-section');
+            const triageResult = document.getElementById('triage-result');
+            
+            triageResult.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <span class="priority-badge priority-${data.priority_level}">
+                        ${data.priority_level.toUpperCase()}
+                    </span>
+                    <span>Confidence: ${Math.round(data.confidence * 100)}%</span>
+                </div>
+                <p><strong>Suggested Department:</strong> ${data.suggested_department}</p>
+                <p><strong>Instructions:</strong> ${data.patient_instructions}</p>
+                <p><strong>Estimated Attention:</strong> ${data.estimated_attention_time}</p>
+            `;
+            
+            triageSection.style.display = 'block';
+            
+            // Reset button
+            analyzeBtn.innerHTML = '✅ Symptoms Analyzed';
+            setTimeout(() => {
+                analyzeBtn.innerHTML = '🔍 Re-analyze Symptoms';
+                analyzeBtn.disabled = false;
+            }, 2000);
+        })
+        .catch(error => {
+            console.error('Error analyzing symptoms:', error);
+            analyzeBtn.innerHTML = '🔍 Analyze Symptoms with AI';
+            analyzeBtn.disabled = false;
+            alert('Unable to analyze symptoms at this time. Please proceed with registration.');
+        });
+    }
+
+    // Auto-analyze symptoms when user stops typing
+    let typingTimer;
+    const symptomsInput = document.querySelector('textarea[name="symptoms"]');
+    
+    symptomsInput.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            if (symptomsInput.value.length > 20) {
+                analyzeSymptoms();
+            }
+        }, 2000);
+    });
+</script>
+{% endblock %}

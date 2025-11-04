@@ -1,12 +1,17 @@
 import os
+import environ
 from pathlib import Path
+
+# Initialize environment variables
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent #Points to "AI Queueing System" folder
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
+SECRET_KEY = env('SECRET_KEY', default='your-secret-key-change-in-production')
 
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'hospital.local']
 
@@ -38,8 +43,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            PROJECT_ROOT / 'templates', # Look in AI Queueing System/templates first
-            BASE_DIR / 'templates'],    # Look in queue_system/templates second
+            BASE_DIR / 'templates',
+           ],   # Look in the root templates folder
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -52,13 +57,21 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'clinic_queue_system.asgi.application'
+ASGI_APPLICATION = 'queue_system.asgi.application'
 
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': PROJECT_ROOT / 'db.sqlite3', # Database file in "AI Queueing System" folder
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME', default='queue_system'),
+        'USER': env('DB_USER', default='queue_user'),
+        'PASSWORD': env('DB_PASSWORD', default='0512'),
+        'HOST': env('DB_HOST', default='localhost'),
+        'PORT': env('DB_PORT', default='5432'),
+        'CONN_MAX_AGE': 600,  # Connection pooling
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
     }
 }
 

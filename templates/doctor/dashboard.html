@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - Dr. {{ doctor.name }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="doctor-theme">
+    <!-- Header -->
+    <header class="header">
+        <div style="display: flex; justify-content: between; align-items: center;">
+            <div>
+                <h1>🏥 AI Queueing Clinic System</h1>
+                <p>Doctor Portal - Dr. {{ doctor.name }} - {{ doctor.specialization }}</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button class="btn btn-primary">Refresh</button>
+                <button class="btn">Settings</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container doctor-dashboard">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">8</span>
+                <span class="stat-label">Patients Seen Today</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">3</span>
+                <span class="stat-label">Currently Waiting</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">12m</span>
+                <span class="stat-label">Average Time</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">92%</span>
+                <span class="stat-label">Efficiency</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Current Queue -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Current Queue - Room {{ doctor.room_number|default:"204" }}</h2>
+                </div>
+                
+                <!-- Now Consulting -->
+                <div class="mb-4">
+                    <h3 style="color: var(--medical-green); margin-bottom: 1rem;">Now Consulting:</h3>
+                    {% if current_ticket %}
+                    <div class="queue-item active">
+                        <div class="patient-info">
+                            <div class="patient-name">{{ current_ticket.patient.first_name }} {{ current_ticket.patient.last_name }}</div>
+                            <div class="patient-symptoms">{{ current_ticket.ticket_number }} • 25m</div>
+                            <div style="margin-top: 0.5rem;">
+                                <span class="priority-badge priority-urgent">URGENT</span>
+                            </div>
+                        </div>
+                        <div class="queue-actions">
+                            <button class="btn btn-success">Complete</button>
+                            <button class="btn">Details</button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color: #6b7280; text-align: center; padding: 2rem;">No patient currently in consultation</p>
+                    {% endif %}
+                </div>
+
+                <!-- Waiting Patients -->
+                <h3 style="margin-bottom: 1rem;">Waiting Patients:</h3>
+                <div class="current-queue">
+                    {% for ticket in waiting_patients %}
+                    <div class="queue-item">
+                        <div class="patient-info">
+                            <div class="patient-name">{{ ticket.patient.first_name }} {{ ticket.patient.last_name }}</div>
+                            <div class="patient-symptoms">{{ ticket.ticket_number }} • {{ ticket.get_wait_time }}m</div>
+                            <div style="margin-top: 0.5rem;">
+                                {% if ticket.ai_priority_score > 0.8 %}
+                                    <span class="priority-badge priority-emergency">EMERGENCY</span>
+                                {% elif ticket.ai_priority_score > 0.5 %}
+                                    <span class="priority-badge priority-urgent">URGENT</span>
+                                {% else %}
+                                    <span class="priority-badge priority-routine">ROUTINE</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="queue-actions">
+                            <button class="btn btn-primary" onclick="callPatient('{{ ticket.id }}')">Call</button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="color: #6b7280; text-align: center; padding: 2rem;">No patients waiting</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn btn-primary" style="flex: 1;">Call Next Patient</button>
+                    <button class="btn btn-warning">Pause</button>
+                    <button class="btn btn-emergency">Emergency</button>
+                </div>
+            </div>
+
+            <!-- AI Insights and Notifications -->
+            <div>
+                <!-- AI Patient Insights -->
+                <div class="card">
+                    <h3 class="card-title">AI Patient Insights</h3>
+                    <div class="ai-recommendations">
+                        <div class="ai-recommendation">
+                            <span style="color: var(--emergency-red);">⚠️</span>
+                            <div>
+                                <strong>Robert Brown: High chest pain risk</strong>
+                                <p>Suggest immediate ECG and cardiac evaluation</p>
+                            </div>
+                        </div>
+                        <div class="ai-recommendation">
+                            <span style="color: var(--warning-amber);">🔍</span>
+                            <div>
+                                <strong>Mary Smith: Likely strep throat</strong>
+                                <p>Consider throat culture test</p>
+                            </div>
+                        </div>
+                        <div class="ai-recommendation">
+                            <span style="color: var(--medical-green);">💊</span>
+                            <div>
+                                <strong>John Doe: Standard flu treatment</strong>
+                                <p>Rest, hydration, standard medication</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card">
+                    <h3 class="card-title">Recent Notifications</h3>
+                    <div class="notification-list">
+                        {% for notification in notifications %}
+                        <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                            <div style="color: var(--hospital-blue);">🔔</div>
+                            <div class="notification-content">
+                                <strong>{{ notification.message }}</strong>
+                                <div class="notification-time">{{ notification.created_at|timesince }} ago</div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p style="color: #6b7280; text-align: center; padding: 1rem;">No new notifications</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- AI Predictions -->
+                <div class="card">
+                    <h3 class="card-title">AI Predictions</h3>
+                    <div style="padding: 1rem;">
+                        <p><strong>Expected Today:</strong> 25 patients</p>
+                        <p><strong>Peak Hours:</strong> 10AM-12PM</p>
+                        <p><strong>Recommended Break:</strong> 1:00-1:30 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        function callPatient(ticketId) {
+            // Implement patient calling functionality
+            console.log('Calling patient with ticket:', ticketId);
+        }
+    </script>
+</body>
+</html>

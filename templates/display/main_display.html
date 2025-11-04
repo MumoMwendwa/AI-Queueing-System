@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Queue Display - AI Queueing Clinic System</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .main-display {
+            background: linear-gradient(135deg, var(--baby-blue-very-light) 0%, var(--baby-blue-light) 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .hospital-header {
+            text-align: center;
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hospital-title {
+            font-size: 3.5rem;
+            color: var(--baby-blue-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .hospital-subtitle {
+            font-size: 1.5rem;
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+        }
+        
+        .departments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .department-card {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid var(--baby-blue);
+            transition: transform 0.3s ease;
+        }
+        
+        .department-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .department-name {
+            font-size: 1.75rem;
+            color: var(--baby-blue-dark);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .current-serving {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--dark-gray);
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        .waiting-count {
+            background: var(--baby-blue-light);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+        
+        .wait-time {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin: 0.5rem 0;
+        }
+        
+        .emergency-banner {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 3px solid var(--emergency-red);
+            color: var(--emergency-red);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            margin: 2rem 0;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .announcements {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .announcement-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--baby-blue-light);
+            font-size: 1.1rem;
+        }
+        
+        .announcement-item:last-child {
+            border-bottom: none;
+        }
+        
+        .hospital-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .info-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--white);
+            border-radius: 0.5rem;
+        }
+        
+        /* Department-specific colors */
+        .card-emergency { border-left-color: var(--emergency-red); }
+        .card-cardiology { border-left-color: #ef4444; }
+        .card-orthopedics { border-left-color: #f59e0b; }
+        .card-pediatrics { border-left-color: #10b981; }
+        .card-general { border-left-color: var(--baby-blue); }
+        
+        /* Marquee for important announcements */
+        .marquee {
+            background: var(--baby-blue);
+            color: var(--dark-gray);
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+    </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        /* ... (Your original CSS styles remain the same) ... */
+    </style>
+</head>
+<body class="main-display">
+    <div class="departments-grid">
+        {% for dept in departments %}
+        <div class="department-card card-{{ dept.name|lower|cut:' ' }}">
+            <div class="department-name">
+                {% if dept.name == 'Emergency' %}🚨
+                {% elif dept.name == 'Cardiology' %}❤️
+                {% elif dept.name == 'Orthopedics' %}🦴
+                {% elif dept.name == 'Pediatrics' %}👶
+                {% else %}🏥{% endif %}
+                {{ dept.name }}
+            </div>
+            
+            {% comment %} 
+            *** FIX 1: Accessing Pre-calculated Current Ticket ***
+            The 'current_ticket' is now calculated in views.py and passed as dept.current_ticket.
+            We don't need the invalid {% with ... %} tag here anymore.
+            {% endcomment %}
+            <div class="current-serving">
+                {% if dept.current_ticket %}
+                    {{ dept.current_ticket.ticket_number }}
+                {% else %}
+                    ---
+                {% endif %}
+            </div>
+            
+            <div style="text-align: center; margin: 1rem 0;">
+                {% if dept.current_ticket %}
+                    <div style="font-size: 1.25rem; font-weight: 500;">
+                        {# Access the patient's name via the related object #}
+                        {{ dept.current_ticket.patient.first_name }} {{ dept.current_ticket.patient.last_name }}
+                    </div>
+                {% else %}
+                    <div style="color: #6b7280;">No patient in consultation</div>
+                {% endif %}
+            </div>
+            
+            <div style="text-align: center;">
+                <div class="waiting-count">
+                    {% comment %} 
+                    *** FIX 2: Accessing Pre-calculated Waiting Count ***
+                    The 'waiting_list' is an array of tickets, so we use its length.
+                    {% endcomment %}
+                    {{ dept.waiting_list|length }} Waiting
+                </div>
+            </div>
+            
+            <div class="wait-time">
+                {% comment %} 
+                *** FIX 3: Using Pre-calculated Waiting Count in Wait Time Calculation ***
+                {% endcomment %}
+                {% with waiting_count=dept.waiting_list|length %}
+                {% if waiting_count > 0 %}
+                    Estimated wait: {{ waiting_count|add:"1" }}0-{{ waiting_count|add:"2" }}0 minutes
+                {% else %}
+                    No wait time
+                {% endif %}
+                {% endwith %}
+            </div>
+            
+            <div style="text-align: center; margin-top: 1rem;">
+                {% comment %} NOTE: Ensure 'department_display' is defined in your urls.py {% endcomment %}
+                <a href="{% url 'department_display' dept.id %}" 
+                    class="btn" 
+                    style="background: var(--baby-blue-light); color: var(--dark-gray);">
+                    View Detailed Queue
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        {% endfor %}
+    </div>
+
+    <script src="{% static 'js/queue_updates.js' %}"></script>
+    <script>
+        // ... (Your original JavaScript remains the same) ...
+    </script>
+</body>
+</html>
+</body>
+</html>

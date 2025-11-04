@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Dr. {{ doctor.name }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="doctor-theme">
+    <!-- Header -->
+    <header class="header">
+        <div style="display: flex; justify-content: between; align-items: center;">
+            <div>
+                <h1>🔔 Notifications - Dr. {{ doctor.name }}</h1>
+                <p>{{ doctor.specialization }} - {{ doctor.department.name }}</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button class="btn btn-primary" onclick="markAllAsRead()">Mark All as Read</button>
+                <a href="{% url 'doctor_dashboard' %}" class="btn">Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="dashboard-grid">
+            <!-- Notifications List -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header" style="display: flex; justify-content: between; align-items: center;">
+                    <h2 class="card-title">Your Notifications</h2>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <span class="priority-badge priority-urgent">{{ unread_count }} Unread</span>
+                        <button class="btn" onclick="clearAllNotifications()">Clear All</button>
+                    </div>
+                </div>
+
+                <div class="notification-list">
+                    {% for notification in notifications %}
+                    <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                         data-notification-id="{{ notification.id }}"
+                         onclick="markAsRead('{{ notification.id }}')">
+                        <div style="font-size: 1.5rem;">
+                            {% if notification.priority == 'emergency' %}🚨{% else %}🔔{% endif %}
+                        </div>
+                        <div class="notification-content">
+                            <div style="display: flex; justify-content: between; align-items: start;">
+                                <div>
+                                    <strong>{{ notification.message }}</strong>
+                                    <div style="margin-top: 0.5rem;">
+                                        <span class="priority-badge priority-{{ notification.priority|default:'routine' }}">
+                                            {{ notification.priority|default:"ROUTINE"|upper }}
+                                        </span>
+                                        <span style="margin-left: 0.5rem; color: #6b7280;">
+                                            Patient: {{ notification.patient.first_name }} {{ notification.patient.last_name }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="notification-time">
+                                    {{ notification.created_at|timesince }} ago
+                                </div>
+                            </div>
+                            
+                            {% if notification.queue_ticket %}
+                            <div style="margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center;">
+                                <span style="background: var(--baby-blue-light); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                    Ticket: {{ notification.queue_ticket.ticket_number }}
+                                </span>
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); viewPatient('{{ notification.patient.id }}')">
+                                    View Patient
+                                </button>
+                                <button class="btn" onclick="event.stopPropagation(); startConsultation('{{ notification.queue_ticket.id }}')">
+                                    Start Consultation
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; padding: 3rem; color: #6b7280;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                        <h3>No notifications</h3>
+                        <p>You're all caught up! New patient arrivals and important updates will appear here.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="card">
+                <h3 class="card-title">Notification Settings</h3>
+                <div style="padding: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked> 
+                            New Patient Arrivals
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked> 
+                            Emergency Cases
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox"> 
+                            Routine Check-ins
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" checked> 
+                            AI Recommendations
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Settings</button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <h3 class="card-title">Notification Statistics</h3>
+                <div style="padding: 1rem;">
+                    <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
+                        <span>Today:</span>
+                        <strong>{{ today_count }} notifications</strong>
+                    </div>
+                    <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
+                        <span>This Week:</span>
+                        <strong>{{ week_count }} notifications</strong>
+                    </div>
+                    <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
+                        <span>Emergency Alerts:</span>
+                        <strong>{{ emergency_count }} alerts</strong>
+                    </div>
+                    <div style="display: flex; justify-content: between;">
+                        <span>Response Rate:</span>
+                        <strong>{{ response_rate }}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        function markAsRead(notificationId) {
+            // Mark notification as read
+            fetch(`/api/notifications/${notificationId}/read/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    document.querySelector(`[data-notification-id="${notificationId}"]`).classList.remove('unread');
+                    updateUnreadCount();
+                }
+            });
+        }
+
+        function markAllAsRead() {
+            // Mark all notifications as read
+            fetch('/api/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => {
+                if (response.ok) {
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    updateUnreadCount();
+                }
+            });
+        }
+
+        function clearAllNotifications() {
+            if (confirm('Are you sure you want to clear all notifications?')) {
+                fetch('/api/notifications/clear-all/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function viewPatient(patientId) {
+            // Navigate to patient details
+            window.location.href = `/doctor/patient/${patientId}/`;
+        }
+
+        function startConsultation(ticketId) {
+            // Start consultation with patient
+            window.location.href = `/doctor/consultation/${ticketId}/`;
+        }
+
+        function updateUnreadCount() {
+            // Update unread count badge
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            document.querySelector('.priority-badge').textContent = `${unreadCount} Unread`;
+        }
+
+        function getCSRFToken() {
+            // Get CSRF token for AJAX requests
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+
+        // Auto-refresh notifications every 30 seconds
+        setInterval(() => {
+            fetch('/api/notifications/unread-count/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.unread_count > parseInt('{{ unread_count }}')) {
+                        location.reload();
+                    }
+                });
+        }, 30000);
+    </script>
+</body>
+</html>

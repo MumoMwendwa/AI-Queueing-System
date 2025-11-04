@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+<div class="patient-dashboard">
+    <!-- Welcome Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Welcome, {{ patient.first_name }}! 👋</h2>
+            <p>We're here to make your hospital visit as comfortable as possible.</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Virtual Card -->
+        <div class="card">
+            <h3 class="card-title">Your Virtual Hospital Card</h3>
+            <div class="virtual-card">
+                <div class="card-info">
+                    <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>Virtual Card:</strong> {{ patient.virtual_card_id }}</p>
+                    <div class="qr-container mt-4">
+                        {% if patient.qr_code %}
+                            <img src="{{ patient.qr_code.url }}" alt="QR Code" class="qr-code">
+                        {% else %}
+                            <div class="qr-code" style="background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: #6b7280;">QR Code</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue Status -->
+        <div class="card">
+            <h3 class="card-title">Current Queue Status</h3>
+            <div class="queue-status">
+                <div class="queue-info">
+                    <p><strong>Department:</strong> {{ current_ticket.department.name }}</p>
+                    <p><strong>Doctor:</strong> Dr. {{ current_ticket.doctor.name }}</p>
+                    
+                    <div class="position-number">
+                        {{ current_ticket.ticket_number }}
+                    </div>
+                    
+                    <div class="wait-time">
+                        Estimated Wait: <strong>{{ current_ticket.estimated_wait_time }} minutes</strong>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: 65%;"></div>
+                    </div>
+                    
+                    <p class="text-center">Approximately <strong>3 patients</strong> ahead of you</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <h3 class="card-title">Quick Actions</h3>
+        <div class="quick-actions">
+            <a href="#check-another-queue" class="action-btn">
+                <span style="font-size: 2rem;">🔄</span>
+                <div>Check Another Queue</div>
+            </a>
+            <a href="#medical-history" class="action-btn">
+                <span style="font-size: 2rem;">📋</span>
+                <div>View Medical History</div>
+            </a>
+            <a href="#emergency-contact" class="action-btn">
+                <span style="font-size: 2rem;">🚨</span>
+                <div>Emergency Contact</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- AI Health Insights -->
+    <div class="card">
+        <h3 class="card-title">AI Health Insights</h3>
+        <div class="ai-recommendations">
+            <div class="ai-recommendation">
+                <span style="color: var(--warning-amber);">🟡</span>
+                <div>
+                    <strong>Moderate flu symptoms detected</strong>
+                    <p>Suggested: Rest and hydration. Monitor temperature regularly.</p>
+                </div>
+            </div>
+            <div class="ai-recommendation">
+                <span style="color: var(--medical-green);">💡</span>
+                <div>
+                    <strong>Low risk of complications</strong>
+                    <p>Standard treatment protocol recommended.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

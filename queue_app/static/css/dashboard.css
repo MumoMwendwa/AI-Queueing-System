@@ -1,0 +1,391 @@
+/* Dashboard Specific Styles */
+
+/* Layout */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Patient Dashboard Specific */
+.patient-dashboard {
+    min-height: 100vh;
+}
+
+.virtual-card {
+    background: linear-gradient(135deg, var(--baby-blue) 0%, var(--baby-blue-light) 100%);
+    color: var(--dark-gray);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    /* SPACE FOR VIRTUAL CARD BACKGROUND IMAGE */
+    /* background-image: url('../images/virtual-card-bg.png'); */
+}
+
+.virtual-card h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.card-info {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Queue Status */
+.queue-status {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--baby-blue-light);
+}
+
+.queue-info {
+    text-align: center;
+    padding: 1rem;
+}
+
+.position-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--baby-blue-dark);
+    margin: 1rem 0;
+}
+
+.wait-time {
+    font-size: 1.25rem;
+    color: var(--dark-gray);
+    margin-bottom: 1rem;
+}
+
+/* Progress Bar */
+.progress-container {
+    background: var(--baby-blue-light);
+    border-radius: 9999px;
+    height: 8px;
+    margin: 1rem 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--baby-blue);
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+/* Doctor Dashboard Specific */
+.doctor-dashboard {
+    min-height: 100vh;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--baby-blue-light);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--baby-blue-dark);
+    display: block;
+}
+
+.stat-label {
+    color: var(--dark-gray);
+    font-size: 0.875rem;
+}
+
+/* Current Queue */
+.current-queue {
+    background: var(--white);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--baby-blue-light);
+}
+
+.queue-item {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--baby-blue-light);
+    transition: background-color 0.2s;
+}
+
+.queue-item:last-child {
+    border-bottom: none;
+}
+
+.queue-item:hover {
+    background: var(--baby-blue-light);
+}
+
+.queue-item.active {
+    background: var(--baby-blue-light);
+    border-left: 4px solid var(--baby-blue);
+}
+
+.patient-info {
+    flex: 1;
+}
+
+.patient-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.patient-symptoms {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.queue-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* AI Recommendations */
+.ai-recommendations {
+    background: var(--baby-blue-light);
+    border: 1px solid var(--baby-blue);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.ai-recommendation {
+    display: flex;
+    align-items: start;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.ai-recommendation:not(:last-child) {
+    border-bottom: 1px solid var(--baby-blue);
+}
+
+/* Display Screens */
+.display-screen {
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.department-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.department-card {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--baby-blue-light);
+    /* SPACE FOR DEPARTMENT CARD BACKGROUND */
+    /* background-image: url('../images/department-bg.png'); */
+}
+
+.department-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--baby-blue-dark);
+    margin-bottom: 1rem;
+}
+
+.now-serving {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--baby-blue-dark);
+    margin: 1rem 0;
+}
+
+.wait-display {
+    font-size: 1.25rem;
+    color: var(--dark-gray);
+}
+
+/* Consultation Screen */
+.consultation-screen {
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.patient-details {
+    background: var(--white);
+    border-radius: 0.5rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--baby-blue-light);
+}
+
+.medical-history {
+    background: var(--white);
+    border-radius: 0.5rem;
+    padding: 2rem;
+    border: 1px solid var(--baby-blue-light);
+}
+
+.history-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--baby-blue-light);
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+/* Notification Styles */
+.notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--baby-blue-light);
+    transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+    background: var(--baby-blue-light);
+}
+
+.notification-item.unread {
+    background: var(--baby-blue-light);
+    border-left: 4px solid var(--baby-blue);
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-time {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.action-btn {
+    background: var(--white);
+    border: 1px solid var(--baby-blue-light);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: var(--dark-gray);
+}
+
+.action-btn:hover {
+    border-color: var(--baby-blue);
+    background: var(--baby-blue-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Emergency Override */
+.emergency-override {
+    background: #fef2f2;
+    border: 2px solid var(--emergency-red);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.emergency-alert {
+    color: var(--emergency-red);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Form Elements */
+input, textarea, select {
+    border: 1px solid var(--baby-blue-light);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    font-family: var(--font-body);
+    transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--baby-blue);
+    box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.1);
+}
+
+/* Image Placeholders for When You Add Images */
+.logo-placeholder {
+    /* SPACE FOR LOGO IMAGE */
+    /* background-image: url('../images/logo.png'); */
+    width: 150px;
+    height: 50px;
+    background-color: var(--baby-blue-light);
+}
+
+.background-pattern {
+    background-image: url(images/Cute\ Medical\ White\ Nurse\ Holiday\ Festival\ Powerpoint\ Background\ For\ Free\ Download.jpeg);
+    /* SPACE FOR BACKGROUND PATTERN IMAGES */
+    /* background-image: url('../images/background-pattern.png'); */
+}
+
+/* SPACE FOR ADDITIONAL IMAGE STYLES */
+/* Add your custom image styles here when you add images */
+
+/* Print Styles for Virtual Cards */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .virtual-card {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border: 2px solid black !important;
+    }
+}

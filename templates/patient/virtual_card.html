@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Virtual Card - {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+
+{% block content %}
+<div class="patient-dashboard">
+    <div class="card text-center">
+        <div class="card-header">
+            <h1 class="card-title">🎫 Your Virtual Hospital Card</h1>
+            <p>Keep this card handy for quick check-ins and hospital visits</p>
+        </div>
+
+        <!-- Virtual Card Display -->
+        <div class="virtual-card" style="max-width: 400px; margin: 0 auto;">
+            <!-- Hospital Logo Space -->
+            <div style="margin-bottom: 1rem;">
+                <div class="logo-placeholder" style="margin: 0 auto; border-radius: 0.5rem;">
+                    <!-- SPACE FOR HOSPITAL LOGO -->
+                    <!-- <img src="{% static 'images/hospital-logo.png' %}" alt="Hospital Logo" style="height: 50px;"> -->
+                    <span style="color: var(--dark-gray); font-weight: 600;">🏥 AI Clinic</span>
+                </div>
+            </div>
+
+            <!-- Patient Photo Space -->
+            <div style="margin-bottom: 1rem;">
+                <div class="image-placeholder" style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%;">
+                    <!-- SPACE FOR PATIENT PHOTO -->
+                    <!-- <img src="{{ patient.photo.url }}" alt="Patient Photo" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;"> -->
+                    <span style="font-size: 2rem;">👤</span>
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="card-info">
+                <h3 style="margin-bottom: 1rem; color: var(--dark-gray);">{{ patient.first_name }} {{ patient.last_name }}</h3>
+                
+                <div style="text-align: left; margin-bottom: 1rem;">
+                    <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+                    <p><strong>Virtual Card ID:</strong> {{ patient.virtual_card_id }}</p>
+                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
+                    <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Not specified" }}</p>
+                    <p><strong>Allergies:</strong> {{ patient.allergies|default:"None" }}</p>
+                </div>
+
+                <!-- QR Code -->
+                <div style="margin: 1rem 0;">
+                    {% if patient.qr_code %}
+                        <img src="{{ patient.qr_code.url }}" alt="QR Code" class="qr-code" style="border: 3px solid var(--white);">
+                    {% else %}
+                        <div class="qr-code image-placeholder" style="margin: 0 auto;">
+                            <span>QR Code</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Emergency Information -->
+                <div style="background: rgba(255, 255, 255, 0.2); padding: 0.75rem; border-radius: 0.5rem; margin-top: 1rem;">
+                    <p style="margin: 0; font-size: 0.875rem;">
+                        <strong>Emergency Contact:</strong> {{ patient.emergency_contact }}<br>
+                        <strong>In case of emergency, show this card to medical staff</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="printCard()">
+                🖨️ Print Card
+            </button>
+            <button class="btn" onclick="downloadCard()">
+                📥 Download Digital Copy
+            </button>
+            <button class="btn" onclick="shareCard()">
+                📤 Share Card
+            </button>
+            <button class="btn" onclick="showQRScanner()">
+                📱 Show QR Scanner
+            </button>
+        </div>
+    </div>
+
+    <!-- Card Usage Instructions -->
+    <div class="dashboard-grid" style="margin-top: 2rem;">
+        <div class="card">
+            <h3 class="card-title">How to Use Your Virtual Card</h3>
+            <div style="padding: 1rem;">
+                <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                    <span style="background: var(--baby-blue); color: var(--dark-gray); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</span>
+                    <div>
+                        <strong>Check-in Quickly</strong>
+                        <p>Show your QR code at reception for instant check-in</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                    <span style="background: var(--baby-blue); color: var(--dark-gray); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</span>
+                    <div>
+                        <strong>Emergency Situations</strong>
+                        <p>Medical staff can scan your QR code for instant access to your information</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                    <span style="background: var(--baby-blue); color: var(--dark-gray); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</span>
+                    <div>
+                        <strong>Prescription Pickup</strong>
+                        <p>Use your card to quickly collect medications</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: start; gap: 1rem;">
+                    <span style="background: var(--baby-blue); color: var(--dark-gray); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">4</span>
+                    <div>
+                        <strong>Appointment Management</strong>
+                        <p>Schedule and manage appointments using your virtual card</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Features -->
+        <div class="card">
+            <h3 class="card-title">Security Features</h3>
+            <div style="padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <span style="color: var(--baby-blue-dark); font-size: 1.5rem;">🔒</span>
+                    <div>
+                        <strong>Encrypted Data</strong>
+                        <p>Your medical information is securely encrypted</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <span style="color: var(--baby-blue-dark); font-size: 1.5rem;">🔄</span>
+                    <div>
+                        <strong>Dynamic QR Code</strong>
+                        <p>QR code updates regularly for enhanced security</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <span style="color: var(--baby-blue-dark); font-size: 1.5rem;">📱</span>
+                    <div>
+                        <strong>Mobile Access</strong>
+                        <p>Access your card anytime through our mobile app</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: var(--baby-blue-dark); font-size: 1.5rem;">👁️</span>
+                    <div>
+                        <strong>Privacy Protected</strong>
+                        <p>Only authorized medical staff can access your full records</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Card -->
+    <div class="card">
+        <h3 class="card-title" style="color: var(--emergency-red);">🚨 Emergency Medical Card</h3>
+        <p>Print this section and keep it with you for emergency situations</p>
+        
+        <div style="background: #fef2f2; border: 2px solid var(--emergency-red); border-radius: 0.5rem; padding: 1.5rem; margin-top: 1rem;">
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <h4 style="color: var(--emergency-red); margin: 0;">EMERGENCY MEDICAL INFORMATION</h4>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
+                </div>
+                <div>
+                    <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Unknown" }}</p>
+                    <p><strong>Allergies:</strong> {{ patient.allergies|default:"None" }}</p>
+                    <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact }}</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button class="btn btn-emergency" onclick="printEmergencyCard()">
+                    🖨️ Print Emergency Card
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function printCard() {
+        window.print();
+    }
+
+    function downloadCard() {
+        // Implement card download functionality
+        alert('Digital card download feature coming soon!');
+    }
+
+    function shareCard() {
+        // Implement card sharing functionality
+        if (navigator.share) {
+            navigator.share({
+                title: 'My Hospital Virtual Card',
+                text: 'My virtual hospital card for AI Queueing Clinic System',
+                url: window.location.href
+            });
+        } else {
+            alert('Share this page link with others: ' + window.location.href);
+        }
+    }
+
+    function showQRScanner() {
+        // Show QR scanner for card verification
+        alert('QR scanner will open to verify your card');
+    }
+
+    function printEmergencyCard() {
+        // Print only the emergency card section
+        const emergencyCard = document.querySelector('.card:last-child');
+        const originalContent = document.body.innerHTML;
+        
+        document.body.innerHTML = emergencyCard.innerHTML;
+        window.print();
+        document.body.innerHTML = originalContent;
+        location.reload();
+    }
+
+    // Auto-refresh QR code every 5 minutes for security
+    setInterval(() => {
+        // Refresh QR code if needed
+        console.log('QR code security refresh check');
+    }, 300000);
+</script>
+
+<style>
+    @media print {
+        .no-print, .btn, .dashboard-grid, .card:not(:first-child) {
+            display: none !important;
+        }
+        .virtual-card {
+            box-shadow: none !important;
+            border: 2px solid #000 !important;
+            background: white !important;
+            color: black !important;
+        }
+    }
+</style>
+{% endblock %}

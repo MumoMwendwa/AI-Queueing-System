@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ department.name }} - Queue Display</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .display-theme {
+            background: linear-gradient(135deg, var(--baby-blue-very-light) 0%, var(--baby-blue-light) 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .department-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .current-ticket {
+            background: var(--baby-blue);
+            color: var(--dark-gray);
+            padding: 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ticket-number {
+            font-size: 6rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            color: var(--dark-gray);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .patient-name {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .waiting-list {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .waiting-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--baby-blue-light);
+            font-size: 1.5rem;
+        }
+        
+        .waiting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .waiting-number {
+            font-weight: 700;
+            color: var(--baby-blue-dark);
+            font-size: 2rem;
+            min-width: 120px;
+        }
+        
+        .waiting-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .waiting-time {
+            color: #6b7280;
+            font-size: 1.25rem;
+        }
+        
+        .estimated-wait {
+            background: var(--baby-blue-light);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 2rem;
+            font-size: 1.25rem;
+        }
+        
+        .doctor-info {
+            background: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin: 1rem 0;
+            border-left: 4px solid var(--baby-blue);
+        }
+        
+        /* Animation for current ticket */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .current-ticket {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Emergency styling */
+        .emergency-alert {
+            background: #fef2f2;
+            border: 3px solid var(--emergency-red);
+            color: var(--emergency-red);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin: 1rem 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body class="display-theme">
+    <!-- Department Header -->
+    <div class="department-header">
+        <h1 style="font-size: 3rem; color: var(--baby-blue-dark); margin-bottom: 1rem;">
+            🏥 {{ department.name }}
+        </h1>
+        <p style="font-size: 1.5rem; color: var(--dark-gray);">
+            Current Queue Status - Real-time Updates
+        </p>
+        <div class="doctor-info">
+            <strong style="font-size: 1.25rem;">Available Doctors:</strong>
+            <span style="color: var(--baby-blue-dark); margin-left: 0.5rem;">
+                {% for doctor in department.doctor_set.all %}
+                    {% if doctor.is_available %}
+                        Dr. {{ doctor.name }}{% if not forloop.last %}, {% endif %}
+                    {% endif %}
+                {% empty %}
+                    No doctors currently available
+                {% endfor %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Current Ticket Display -->
+    <div class="current-ticket">
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">NOW SERVING</h2>
+        
+        {% with current_ticket=current_tickets|first %}
+        {% if current_ticket and current_ticket.status == 'in_consultation' %}
+            <div class="ticket-number">{{ current_ticket.ticket_number }}</div>
+            <div class="patient-name">
+                {{ current_ticket.patient.first_name }} {{ current_ticket.patient.last_name }}
+            </div>
+            <div style="font-size: 1.5rem; margin-top: 1rem;">
+                <span class="priority-badge priority-{{ current_ticket.priority|default:'routine' }}">
+                    {{ current_ticket.priority|default:"ROUTINE"|upper }}
+                </span>
+            </div>
+        {% else %}
+            <div class="ticket-number" style="color: #6b7280;">---</div>
+            <div class="patient-name" style="color: #6b7280;">No patient currently in consultation</div>
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Next Ticket Preview -->
+        {% with next_ticket=current_tickets|first %}
+        {% if next_ticket %}
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px dashed var(--baby-blue-light);">
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">NEXT UP:</h3>
+                <div style="font-size: 2rem; font-weight: 600; color: var(--baby-blue-dark);">
+                    {{ next_ticket.ticket_number }}
+                </div>
+                <div style="font-size: 1.25rem;">
+                    {{ next_ticket.patient.first_name }} {{ next_ticket.patient.last_name }}
+                </div>
+            </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Emergency Alert (if any emergency cases) -->
+    {% for ticket in current_tickets %}
+        {% if ticket.priority == 'emergency' and ticket.status == 'waiting' %}
+            <div class="emergency-alert">
+                🚨 EMERGENCY CASE IN QUEUE: {{ ticket.ticket_number }} - 
+                {{ ticket.patient.first_name }} {{ ticket.patient.last_name }}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Waiting List -->
+    <div class="waiting-list">
+        <h2 style="font-size: 2rem; text-align: center; margin-bottom: 2rem; color: var(--baby-blue-dark);">
+            WAITING LIST
+        </h2>
+        
+        {% for ticket in current_tickets %}
+            {% if ticket.status == 'waiting' %}
+            <div class="waiting-item">
+                <div class="waiting-number">{{ ticket.ticket_number }}</div>
+                <div class="waiting-name">
+                    {{ ticket.patient.first_name }} {{ ticket.patient.last_name }}
+                    {% if ticket.priority == 'emergency' %}
+                        <span style="color: var(--emergency-red); margin-left: 1rem;">🚨</span>
+                    {% elif ticket.priority == 'urgent' %}
+                        <span style="color: var(--warning-amber); margin-left: 1rem;">⚠️</span>
+                    {% endif %}
+                </div>
+                <div class="waiting-time">
+                    Waiting: {{ forloop.counter|add:"-1" }}0 min
+                </div>
+            </div>
+            {% endif %}
+        {% empty %}
+            <div style="text-align: center; padding: 3rem; color: #6b7280;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                <h3 style="font-size: 2rem;">No patients waiting</h3>
+                <p style="font-size: 1.25rem;">All patients have been attended to</p>
+            </div>
+        {% endfor %}
+        
+        <!-- Estimated Wait Time -->
+        {% if current_tickets %}
+            <div class="estimated-wait">
+                <strong style="font-size: 1.25rem;">Estimated Wait Time:</strong>
+                <span style="font-size: 1.5rem; color: var(--baby-blue-dark); margin-left: 0.5rem;">
+                    {{ estimated_wait_time }} minutes
+                </span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Last Updated -->
+    <div class="last-updated">
+        Last updated: <span id="last-updated-time">{{ current_time|date:"h:i A" }}</span>
+        <br>
+        <small>Updates automatically every 30 seconds</small>
+    </div>
+
+    <!-- Hospital Information -->
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--white); border-radius: 1rem;">
+        <h3 style="color: var(--baby-blue-dark); margin-bottom: 1rem;">Hospital Information</h3>
+        <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;">
+            <div>
+                <strong>Emergency:</strong> Call 911 or approach any staff member
+            </div>
+            <div>
+                <strong>Information Desk:</strong> Ground Floor, Main Lobby
+            </div>
+            <div>
+                <strong>Cafeteria:</strong> Level 2, Open 7AM-7PM
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/queue_updates.js' %}"></script>
+    <script>
+        // Auto-refresh the display every 30 seconds
+        setInterval(() => {
+            location.reload();
+        }, 30000);
+        
+        // Update the last updated time every minute
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('last-updated-time').textContent = timeString;
+        }
+        
+        setInterval(updateTime, 60000);
+        
+        // WebSocket connection for real-time updates
+        const departmentId = "{{ department.id }}";
+        const socket = new WebSocket(`ws://${window.location.host}/ws/department/${departmentId}/`);
+        
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'queue_update') {
+                // Show update notification
+                showUpdateNotification('Queue updated - refreshing...');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        };
+        
+        function showUpdateNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--baby-blue);
+                color: var(--dark-gray);
+                padding: 1rem 2rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                font-weight: 500;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Initialize
+        updateTime();
+    </script>
+</body>
+</html>

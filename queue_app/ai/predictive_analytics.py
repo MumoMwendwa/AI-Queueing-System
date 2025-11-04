@@ -1,35 +1,51 @@
-import random
+# queue_app/ai/predictive_analytics.py
+import joblib
+import os
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
 
 class PredictiveAnalytics:
-    def __init__(self, data):
-        self.data = data  # could be patient visit data, timestamps, etc.
+    def __init__(self):
+        self.model_path = os.path.join(os.path.dirname(__file__), 'models', 'predictive_model.pkl')
+        self.model = None
 
-    def predict_queue_length(self):
+    def predict_queue_length(self, current_patients, avg_service_time):
         """
-        Dummy prediction — replace with trained model in future.
+        Predict queue length based on current patients and service time.
         """
-        current_hour = self.data.get('hour', 12)
-        if 9 <= current_hour <= 11:
-            return random.randint(15, 25)  # peak hours
-        elif 12 <= current_hour <= 15:
-            return random.randint(5, 15)
-        return random.randint(1, 10)
+        if self.model:
+            X = np.array([[current_patients, avg_service_time]])
+            prediction = self.model.predict(X)[0]
+            return round(prediction, 2)
+        # fallback
+        return current_patients * avg_service_time * 0.1
 
-    def predict_wait_time(self):
+    def train_model(self):
         """
-        Predict average waiting time (in minutes).
+        Train a simple linear regression model to predict queue length.
         """
-        queue_length = self.predict_queue_length()
-        return queue_length * 5  # assume avg 5 mins per patient
+        print("🧠 Training Predictive Analytics model...")
 
-    def get_queue_message(self):
-        """
-        Return a message based on queue length.
-        """
-        queue_length = self.predict_queue_length()
-        if queue_length >= 15:
-            return f"High queue expected ({queue_length} patients)."
-        elif 5 <= queue_length < 15:
-            return f"Moderate queue expected ({queue_length} patients)."
+        # Dummy data (patients, service_time) -> queue_length
+        X = np.random.randint(1, 50, (100, 2))
+        y = X[:, 0] * 0.8 + X[:, 1] * 2 + np.random.randn(100) * 3  # simulate wait time
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+        score = model.score(X_test, y_test)
+
+        os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
+        joblib.dump(model, self.model_path)
+        self.model = model
+
+        print(f"✅ Predictive model trained successfully (R²: {score:.2f})")
+        return score
+
+    def load_model(self):
+        if os.path.exists(self.model_path):
+            self.model = joblib.load(self.model_path)
+            print("📦 Loaded Predictive Analytics model.")
         else:
-            return f"Low queue expected ({queue_length} patients)."
+            print("⚠️ No trained model found.")

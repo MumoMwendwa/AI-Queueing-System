@@ -1,34 +1,77 @@
-# queue_app/management/commands/train_ai_models.py
 
 from django.core.management.base import BaseCommand
-from sklearn.ensemble import RandomForestRegressor
-import joblib
 import os
+import joblib
 from django.conf import settings
-import numpy as np
+
+# Import your existing AI modules
+from queue_app.ai import (
+    predictive_analytics,
+    triage_system,
+    medical_analysis,
+    queue_optimizer,
+    notification_system,
+)
 
 class Command(BaseCommand):
-    help = 'Train AI models used for the clinic queue system'
+    help = "Train and update all AI modules for the queue system safely"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("Training AI wait time prediction model...")
-
-        # Example training data (replace later with real historical data)
-        X = np.array([
-            [1, 5, 10, 2, 0],   # [department_id, queue_length, hour, day_of_week, is_weekend]
-            [1, 2, 15, 3, 0],
-            [2, 8, 11, 5, 1],
-            [3, 4, 9, 0, 0],
-        ])
-        y = np.array([20, 10, 30, 15])  # example wait times in minutes
-
-        model = RandomForestRegressor(n_estimators=100, random_state=42)
-        model.fit(X, y)
-
-        # Save the model
-        model_dir = os.path.join(settings.BASE_DIR, 'ai_models')
+        model_dir = os.path.join(settings.BASE_DIR, "ai_models")
         os.makedirs(model_dir, exist_ok=True)
-        model_path = os.path.join(model_dir, 'wait_time_model.pkl')
-        joblib.dump(model, model_path)
 
-        self.stdout.write(self.style.SUCCESS(f"✅ Model trained and saved to {model_path}"))
+        self.stdout.write("🚀 Starting AI training pipeline...\n")
+
+        trained_models = {}
+
+        # Each of your modules is handled separately and safely:
+        try:
+            self.stdout.write("🧠 Training Predictive Analytics (wait time)...")
+            model = predictive_analytics.train_model()
+            joblib.dump(model, os.path.join(model_dir, "wait_time_model.pkl"))
+            trained_models["Predictive Analytics"] = "✅ Success"
+        except Exception as e:
+            trained_models["Predictive Analytics"] = f"❌ Failed: {e}"
+
+        try:
+            self.stdout.write("⚕️ Training Triage System (patient prioritization)...")
+            model = triage_system.train_model()
+            joblib.dump(model, os.path.join(model_dir, "triage_model.pkl"))
+            trained_models["Triage System"] = "✅ Success"
+        except Exception as e:
+            trained_models["Triage System"] = f"❌ Failed: {e}"
+
+        try:
+            self.stdout.write("🩺 Training Medical Analysis (diagnostics)...")
+            model = medical_analysis.train_model()
+            joblib.dump(model, os.path.join(model_dir, "medical_model.pkl"))
+            trained_models["Medical Analysis"] = "✅ Success"
+        except Exception as e:
+            trained_models["Medical Analysis"] = f"❌ Failed: {e}"
+
+        try:
+            self.stdout.write("📊 Training Queue Optimizer (flow management)...")
+            model = queue_optimizer.train_model()
+            joblib.dump(model, os.path.join(model_dir, "queue_optimizer_model.pkl"))
+            trained_models["Queue Optimizer"] = "✅ Success"
+        except Exception as e:
+            trained_models["Queue Optimizer"] = f"❌ Failed: {e}"
+
+        try:
+            self.stdout.write("🔔 Updating Notification System (AI messaging logic)...")
+            # Notification system might not need a model, but we can trigger its AI refresh.
+            if hasattr(notification_system, "train_model"):
+                model = notification_system.train_model()
+                joblib.dump(model, os.path.join(model_dir, "notification_model.pkl"))
+                trained_models["Notification System"] = "✅ Success"
+            else:
+                trained_models["Notification System"] = "ℹ️ Skipped (no model training needed)"
+        except Exception as e:
+            trained_models["Notification System"] = f"❌ Failed: {e}"
+
+        # 📝 Summary Log
+        self.stdout.write("\n📦 Training Summary:")
+        for name, status in trained_models.items():
+            self.stdout.write(f"   {name}: {status}")
+
+        self.stdout.write(self.style.SUCCESS("\n🎉 AI training completed without overwriting existing logic!"))
