@@ -3,71 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultation - Dr. {{ doctor.name }}</title>
+    <title>Consultation - Dr. {{ doctor_display_name }}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="doctor-theme">
-    <!-- Header -->
     <header class="header">
-        <div style="display: flex; justify-content: between; align-items: center;">
+        <div style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
             <div>
-                <h1>🏥 Consultation Room - Dr. {{ doctor.name }}</h1>
-                <p>Current Patient: {{ patient.first_name }} {{ patient.last_name }}</p>
+                <h1>🏥 Consultation Room</h1>
+                <p>Dr. {{ doctor_display_name }} - {{ doctor.specialization }}</p>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <a href="{% url 'doctor_dashboard' %}" class="btn">Back to Dashboard</a>
                 <button class="btn btn-primary">Save Progress</button>
                 <button class="btn btn-success">Complete Consultation</button>
-                <button class="btn">Emergency</button>
             </div>
         </div>
     </header>
 
     <div class="consultation-screen">
         <div class="dashboard-grid">
-            <!-- Patient Details -->
             <div class="patient-details">
                 <h2 style="margin-bottom: 1rem;">Patient Information</h2>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
-                        <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
-                        <p><strong>Age:</strong> {{ patient_age }} years</p>
-                        <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+                        <p><strong>Name:</strong> {{ patient.user.get_full_name }}</p>
+                        <p><strong>Age:</strong> {{ patient_age }}</p>
+                        <p><strong>Contact:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
                     </div>
                     <div>
-                        <p><strong>Virtual Card:</strong> {{ patient.virtual_card_id }}</p>
-                        <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Not specified" }}</p>
-                        <p><strong>Allergies:</strong> {{ patient.allergies|default:"None recorded" }}</p>
+                        <p><strong>Virtual Card:</strong> {{ virtual_card_id }}</p>
+                        <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact|default:"Not provided" }}</p>
+                        <p><strong>Ticket:</strong> {{ current_ticket.ticket_number }}</p>
                     </div>
                 </div>
-                
-                <!-- AI Triage Summary -->
+
                 <div class="ai-recommendations mt-4">
                     <h4 style="margin-bottom: 0.5rem;">AI Triage Summary</h4>
-                    <div class="priority-badge priority-{{ current_ticket.priority }}">
-                        {{ current_ticket.priority|upper }}
+                    <div class="priority-badge priority-{{ priority_label }}">
+                        {{ priority_label|upper }}
                     </div>
-                    <p style="margin-top: 0.5rem;"><strong>Presenting Symptoms:</strong> {{ current_ticket.symptoms }}</p>
+                    <p style="margin-top: 0.5rem;"><strong>Symptoms / AI Notes:</strong> {{ symptom_summary }}</p>
+                    {% if current_ticket.department %}
+                    <p style="margin-top: 0.5rem;"><strong>Department:</strong> {{ current_ticket.department.name }}</p>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Consultation Form -->
             <div class="card">
                 <h3 class="card-title">Consultation Notes</h3>
                 <form>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Diagnosis</label>
-                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 100px;" 
-                                  placeholder="Enter diagnosis..."></textarea>
+                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 100px;" placeholder="Enter diagnosis..."></textarea>
                     </div>
-                    
+
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Treatment Plan</label>
-                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 100px;" 
-                                  placeholder="Enter treatment plan..."></textarea>
+                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 100px;" placeholder="Enter treatment plan..."></textarea>
                     </div>
-                    
+
                     <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Prescriptions</label>
+                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 80px;" placeholder="Enter prescriptions..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-primary">Generate AI Summary</button>
+                        <button type="button" class="btn btn-warning">Request Tests</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">Next Actions</h3>
+                <div style="padding: 1rem;">
+                    <p><strong>Current Status:</strong> {{ current_ticket.status|capfirst }}</p>
+                    <p><strong>Estimated Wait:</strong> {{ current_ticket.estimated_wait_time|default:"Pending" }} minutes</p>
+                    <p><strong>Priority Score:</strong> {{ current_ticket.ai_priority_score }}</p>
+                    <p><strong>Patient Symptom History:</strong> {{ patient.symptoms|default:"No symptom history recorded" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

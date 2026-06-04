@@ -3,89 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Dashboard - Dr. {{ doctor.name }}</title>
+    <title>Doctor Dashboard - Dr. {{ doctor_display_name }}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="doctor-theme">
-    <!-- Header -->
     <header class="header">
-        <div style="display: flex; justify-content: between; align-items: center;">
+        <div style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
             <div>
-                <h1>🏥 AI Queueing Clinic System</h1>
-                <p>Doctor Portal - Dr. {{ doctor.name }} - {{ doctor.specialization }}</p>
+                <h1>🏥 Doctor Portal</h1>
+                <p>Dr. {{ doctor_display_name }} - {{ doctor.specialization }}{% if doctor.room_number %} - Room {{ doctor.room_number }}{% endif %}</p>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <button class="btn btn-primary">Refresh</button>
-                <button class="btn">Settings</button>
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <a href="{% url 'doctor_dashboard' %}" class="btn btn-primary">Dashboard</a>
+                <a href="{% url 'doctor_notifications' %}" class="btn">Notifications</a>
             </div>
         </div>
     </header>
 
     <div class="dashboard-container doctor-dashboard">
-        <!-- Stats Overview -->
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-number">8</span>
+                <span class="stat-number">{{ patients_seen_today }}</span>
                 <span class="stat-label">Patients Seen Today</span>
             </div>
             <div class="stat-card">
-                <span class="stat-number">3</span>
+                <span class="stat-number">{{ currently_waiting }}</span>
                 <span class="stat-label">Currently Waiting</span>
             </div>
             <div class="stat-card">
-                <span class="stat-number">12m</span>
-                <span class="stat-label">Average Time</span>
+                <span class="stat-number">{{ average_time }}m</span>
+                <span class="stat-label">Average Wait</span>
             </div>
             <div class="stat-card">
-                <span class="stat-number">92%</span>
-                <span class="stat-label">Efficiency</span>
+                <span class="stat-number">{{ unread_count }}</span>
+                <span class="stat-label">Unread Notifications</span>
             </div>
         </div>
 
         <div class="dashboard-grid">
-            <!-- Current Queue -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Current Queue - Room {{ doctor.room_number|default:"204" }}</h2>
+                    <h2 class="card-title">Current Queue</h2>
                 </div>
-                
-                <!-- Now Consulting -->
+
                 <div class="mb-4">
                     <h3 style="color: var(--medical-green); margin-bottom: 1rem;">Now Consulting:</h3>
                     {% if current_ticket %}
                     <div class="queue-item active">
                         <div class="patient-info">
-                            <div class="patient-name">{{ current_ticket.patient.first_name }} {{ current_ticket.patient.last_name }}</div>
-                            <div class="patient-symptoms">{{ current_ticket.ticket_number }} • 25m</div>
+                            <div class="patient-name">{{ current_ticket.patient.user.get_full_name }}</div>
+                            <div class="patient-symptoms">Ticket {{ current_ticket.ticket_number }} • {% if current_ticket.status == 'in_consultation' %}In consultation{% else %}Waiting{% endif %}</div>
                             <div style="margin-top: 0.5rem;">
-                                <span class="priority-badge priority-urgent">URGENT</span>
-                            </div>
-                        </div>
-                        <div class="queue-actions">
-                            <button class="btn btn-success">Complete</button>
-                            <button class="btn">Details</button>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p style="color: #6b7280; text-align: center; padding: 2rem;">No patient currently in consultation</p>
-                    {% endif %}
-                </div>
-
-                <!-- Waiting Patients -->
-                <h3 style="margin-bottom: 1rem;">Waiting Patients:</h3>
-                <div class="current-queue">
-                    {% for ticket in waiting_patients %}
-                    <div class="queue-item">
-                        <div class="patient-info">
-                            <div class="patient-name">{{ ticket.patient.first_name }} {{ ticket.patient.last_name }}</div>
-                            <div class="patient-symptoms">{{ ticket.ticket_number }} • {{ ticket.get_wait_time }}m</div>
-                            <div style="margin-top: 0.5rem;">
-                                {% if ticket.ai_priority_score > 0.8 %}
+                                {% if current_ticket.ai_priority_score >= 0.8 %}
                                     <span class="priority-badge priority-emergency">EMERGENCY</span>
-                                {% elif ticket.ai_priority_score > 0.5 %}
+                                {% elif current_ticket.ai_priority_score >= 0.5 %}
                                     <span class="priority-badge priority-urgent">URGENT</span>
                                 {% else %}
                                     <span class="priority-badge priority-routine">ROUTINE</span>
@@ -93,7 +67,34 @@
                             </div>
                         </div>
                         <div class="queue-actions">
-                            <button class="btn btn-primary" onclick="callPatient('{{ ticket.id }}')">Call</button>
+                            <a href="{% url 'doctor_consultation' current_ticket.id %}" class="btn btn-success">Open Consultation</a>
+                            <a href="{% url 'doctor_patient' current_ticket.patient.id %}" class="btn">Patient Details</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color: #6b7280; text-align: center; padding: 2rem;">No patient currently assigned</p>
+                    {% endif %}
+                </div>
+
+                <h3 style="margin-bottom: 1rem;">Waiting Patients:</h3>
+                <div class="current-queue">
+                    {% for ticket in waiting_patients %}
+                    <div class="queue-item">
+                        <div class="patient-info">
+                            <div class="patient-name">{{ ticket.patient.user.get_full_name }}</div>
+                            <div class="patient-symptoms">Ticket {{ ticket.ticket_number }} • {{ ticket.estimated_wait_time|default:"Pending" }}m</div>
+                            <div style="margin-top: 0.5rem;">
+                                {% if ticket.ai_priority_score >= 0.8 %}
+                                    <span class="priority-badge priority-emergency">EMERGENCY</span>
+                                {% elif ticket.ai_priority_score >= 0.5 %}
+                                    <span class="priority-badge priority-urgent">URGENT</span>
+                                {% else %}
+                                    <span class="priority-badge priority-routine">ROUTINE</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="queue-actions">
+                            <a href="{% url 'doctor_consultation' ticket.id %}" class="btn btn-primary">Call</a>
                         </div>
                     </div>
                     {% empty %}
@@ -101,45 +102,40 @@
                     {% endfor %}
                 </div>
 
-                <!-- Action Buttons -->
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button class="btn btn-primary" style="flex: 1;">Call Next Patient</button>
-                    <button class="btn btn-warning">Pause</button>
-                    <button class="btn btn-emergency">Emergency</button>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <a href="{% url 'doctor_notifications' %}" class="btn btn-primary" style="flex: 1; min-width: 180px; text-align: center;">Open Notifications</a>
+                    <a href="{% url 'doctor_dashboard' %}" class="btn btn-warning" style="min-width: 120px; text-align: center;">Refresh View</a>
                 </div>
             </div>
 
-            <!-- AI Insights and Notifications -->
             <div>
-                <!-- AI Patient Insights -->
                 <div class="card">
-                    <h3 class="card-title">AI Patient Insights</h3>
+                    <h3 class="card-title">Doctor Snapshot</h3>
                     <div class="ai-recommendations">
                         <div class="ai-recommendation">
-                            <span style="color: var(--emergency-red);">⚠️</span>
+                            <span style="color: var(--hospital-blue);">👤</span>
                             <div>
-                                <strong>Robert Brown: High chest pain risk</strong>
-                                <p>Suggest immediate ECG and cardiac evaluation</p>
+                                <strong>{{ doctor_display_name }}</strong>
+                                <p>{{ doctor.specialization }}</p>
                             </div>
                         </div>
                         <div class="ai-recommendation">
-                            <span style="color: var(--warning-amber);">🔍</span>
+                            <span style="color: var(--medical-green);">🪑</span>
                             <div>
-                                <strong>Mary Smith: Likely strep throat</strong>
-                                <p>Consider throat culture test</p>
+                                <strong>Room {{ doctor.room_number|default:"Unassigned" }}</strong>
+                                <p>Dedicated doctor workspace</p>
                             </div>
                         </div>
                         <div class="ai-recommendation">
-                            <span style="color: var(--medical-green);">💊</span>
+                            <span style="color: var(--warning-amber);">🔔</span>
                             <div>
-                                <strong>John Doe: Standard flu treatment</strong>
-                                <p>Rest, hydration, standard medication</p>
+                                <strong>{{ unread_count }} unread notifications</strong>
+                                <p>Latest clinic updates and alerts</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Notifications -->
                 <div class="card">
                     <h3 class="card-title">Recent Notifications</h3>
                     <div class="notification-list">
@@ -156,26 +152,10 @@
                         {% endfor %}
                     </div>
                 </div>
-
-                <!-- AI Predictions -->
-                <div class="card">
-                    <h3 class="card-title">AI Predictions</h3>
-                    <div style="padding: 1rem;">
-                        <p><strong>Expected Today:</strong> 25 patients</p>
-                        <p><strong>Peak Hours:</strong> 10AM-12PM</p>
-                        <p><strong>Recommended Break:</strong> 1:00-1:30 PM</p>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     <script src="{% static 'js/main.js' %}"></script>
-    <script>
-        function callPatient(ticketId) {
-            // Implement patient calling functionality
-            console.log('Calling patient with ticket:', ticketId);
-        }
-    </script>
 </body>
 </html>

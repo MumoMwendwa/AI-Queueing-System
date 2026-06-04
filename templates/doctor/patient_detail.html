@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient - {{ patient.user.get_full_name }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="doctor-theme">
+    <header class="header">
+        <div style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div>
+                <h1>👤 Patient Details</h1>
+                <p>Dr. {{ doctor_display_name }} - {{ doctor.specialization }}</p>
+            </div>
+            <div>
+                <a href="{% url 'doctor_dashboard' %}" class="btn">Back to Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="card">
+            <h2 class="card-title">{{ patient.user.get_full_name }}</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; padding: 1rem 0;">
+                <div>
+                    <p><strong>Age:</strong> {{ patient.age|default:"Not recorded" }}</p>
+                    <p><strong>Contact:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
+                    <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact|default:"Not provided" }}</p>
+                </div>
+                <div>
+                    <p><strong>Gender:</strong> {{ patient.gender|default:"Not recorded" }}</p>
+                    <p><strong>Virtual Card:</strong> {{ virtual_card_id }}</p>
+                    <p><strong>Recent Ticket:</strong> {% if latest_ticket %}{{ latest_ticket.ticket_number }}{% else %}None{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="ai-recommendations">
+                <h3 style="margin-bottom: 0.75rem;">Clinical Notes</h3>
+                <p><strong>Symptoms:</strong> {{ patient.symptoms|default:"No symptoms recorded." }}</p>
+                {% if latest_ticket %}
+                <p><strong>Latest Status:</strong> {{ latest_ticket.status|capfirst }}</p>
+                <p><strong>Department:</strong> {{ latest_ticket.department.name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+ $ python manage.py shell
+Python 3.12.1 (main, Mar 11 2026, 12:17:56) [GCC 13.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.contrib.auth.models import User
+>>> from queue_app.models import Doctor
+>>> 
+>>> # 1) Create user (or get existing one)
+>>> user, created = User.objects.get_or_create(
+...     username="doc1",
+...     defaults={"email": "doc1@example.com"}
+... )
+>>> if created:
+...     user.set_password("password123")
+...     user.first_name = "John"
+...     user.last_name = "Doe"
+...     user.save()
+... 
+>>> # 2) Link doctor profile to user
+>>> doctor, d_created = Doctor.objects.get_or_create(
+...     user=user,
+...     defaults={"specialization": "General Medicine", "room_number": "101"}
+... )
+>>> 
+>>> print("User created:", created)
+User created: False
+>>> print("Doctor profile created:", d_created)
+Doctor profile created: False
+>>> print("Doctor:", doctor)
+Doctor: Dr. John Doe - General Medicine
+>>> exit()

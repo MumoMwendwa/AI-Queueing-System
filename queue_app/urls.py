@@ -2,7 +2,18 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import DoctorViewSet, PatientViewSet, QueueViewSet, NotificationViewSet, QueueTicketViewSet,home
+from .views import (
+    DoctorViewSet,
+    PatientViewSet,
+    QueueViewSet,
+    NotificationViewSet,
+    QueueTicketViewSet,
+    doctor_consultation,
+    doctor_dashboard,
+    doctor_notifications,
+    doctor_patient_detail,
+    home,
+)
 from . import ai_views
 # Create a router to automatically handle all viewset URLs
 router = DefaultRouter()
@@ -18,6 +29,13 @@ urlpatterns = [
     # Include all the router-generated routes
     path('', include(router.urls)),
     path('', home, name='home'),
+
+    # Doctor portal
+    path('doctor/', doctor_dashboard, name='doctor_home'),
+    path('doctor/dashboard/', doctor_dashboard, name='doctor_dashboard'),
+    path('doctor/notifications/', doctor_notifications, name='doctor_notifications'),
+    path('doctor/consultation/<int:ticket_id>/', doctor_consultation, name='doctor_consultation'),
+    path('doctor/patient/<int:patient_id>/', doctor_patient_detail, name='doctor_patient'),
 
      # API routes
     path('api/patient/check-in/', ai_views.api_patient_check_in, name='api_patient_check_in'),

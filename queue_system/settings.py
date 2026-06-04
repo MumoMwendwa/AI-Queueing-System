@@ -62,16 +62,13 @@ ASGI_APPLICATION = 'queue_system.asgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME', default='queue_system'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / env('DB_NAME', default='db.sqlite3'),
         'USER': env('DB_USER', default='queue_user'),
         'PASSWORD': env('DB_PASSWORD', default='0512'),
         'HOST': env('DB_HOST', default='localhost'),
         'PORT': env('DB_PORT', default='5432'),
         'CONN_MAX_AGE': 600,  # Connection pooling
-        'OPTIONS': {
-            'connect_timeout': 10,
-        }
     }
 }
 
