@@ -1,30 +1,37 @@
 {% extends "base.html" %}
-
 {% load static %}
 
+{% block title %}Patient Dashboard - AI Queueing Clinic System{% endblock %}
+
+{% block content %}
 <div class="patient-dashboard">
-    <!-- Welcome Section -->
     <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Welcome, {{ patient.first_name }}! 👋</h2>
-            <p>We're here to make your hospital visit as comfortable as possible.</p>
+        <div class="card-header text-center">
+            <h2 class="card-title">Welcome, {{ patient.first_name }} {{ patient.last_name }}! 👋</h2>
+            <p>Your registration is complete. Your virtual card and queue details are shown below.</p>
         </div>
     </div>
 
     <div class="dashboard-grid">
-        <!-- Virtual Card -->
         <div class="card">
             <h3 class="card-title">Your Virtual Hospital Card</h3>
             <div class="virtual-card">
                 <div class="card-info">
-                    <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+                    <p><strong>Virtual Card No:</strong> {{ patient.virtual_card_id|default:"Not generated yet" }}</p>
                     <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
-                    <p><strong>Virtual Card:</strong> {{ patient.virtual_card_id }}</p>
+                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth|default:"Not provided" }}</p>
+                    <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Not provided" }}</p>
+                    <p><strong>Allergies:</strong> {{ patient.allergies|default:"None reported" }}</p>
+                    <p><strong>Phone:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
+                    <p><strong>Email:</strong> {{ patient.email|default:"Not provided" }}</p>
+                    <p><strong>Address:</strong> {{ patient.address|default:"Not provided" }}</p>
+                    <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact|default:"Not provided" }}</p>
+                    <p><strong>Relationship:</strong> {{ patient.emergency_contact_relationship|default:"Not provided" }}</p>
                     <div class="qr-container mt-4">
                         {% if patient.qr_code %}
                             <img src="{{ patient.qr_code.url }}" alt="QR Code" class="qr-code">
                         {% else %}
-                            <div class="qr-code" style="background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                            <div class="qr-code" style="background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 180px;">
                                 <span style="color: #6b7280;">QR Code</span>
                             </div>
                         {% endif %}
@@ -33,33 +40,31 @@
             </div>
         </div>
 
-        <!-- Queue Status -->
         <div class="card">
             <h3 class="card-title">Current Queue Status</h3>
             <div class="queue-status">
                 <div class="queue-info">
-                    <p><strong>Department:</strong> {{ current_ticket.department.name }}</p>
-                    <p><strong>Doctor:</strong> Dr. {{ current_ticket.doctor.name }}</p>
-                    
+                    <p><strong>Department:</strong> {{ current_ticket.department.name|default:"Not in queue" }}</p>
+                    <p><strong>Doctor:</strong> {% if current_ticket.doctor %}Dr. {{ current_ticket.doctor.user.get_full_name|default:current_ticket.doctor.user.username }}{% else %}Not assigned{% endif %}</p>
+
                     <div class="position-number">
-                        {{ current_ticket.ticket_number }}
+                        {{ current_ticket.ticket_number|default:"N/A" }}
                     </div>
-                    
+
                     <div class="wait-time">
-                        Estimated Wait: <strong>{{ current_ticket.estimated_wait_time }} minutes</strong>
+                        Estimated Wait: <strong>{{ current_ticket.estimated_wait_time|default:0 }} minutes</strong>
                     </div>
-                    
+
                     <div class="progress-container">
                         <div class="progress-bar" style="width: 65%;"></div>
                     </div>
-                    
-                    <p class="text-center">Approximately <strong>3 patients</strong> ahead of you</p>
+
+                    <p class="text-center">We will notify you when it is time to proceed.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
     <div class="card">
         <h3 class="card-title">Quick Actions</h3>
         <div class="quick-actions">
@@ -78,7 +83,38 @@
         </div>
     </div>
 
-    <!-- AI Health Insights -->
+    <div class="card">
+        <h3 class="card-title" id="medical-history">Medical History</h3>
+        <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem;">
+            <p><strong>Symptoms:</strong></p>
+            <div style="padding: 0.75rem; background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                {% if patient.symptoms %}
+                    <p style="margin: 0; white-space: pre-line;">{{ patient.symptoms }}</p>
+                {% else %}
+                    <p style="margin: 0; color: #6b7280;">No symptoms recorded yet.</p>
+                {% endif %}
+            </div>
+
+            <p><strong>Existing Conditions:</strong></p>
+            <div style="padding: 0.75rem; background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                {% if patient.existing_conditions %}
+                    <p style="margin: 0; white-space: pre-line;">{{ patient.existing_conditions }}</p>
+                {% else %}
+                    <p style="margin: 0; color: #6b7280;">No existing conditions recorded.</p>
+                {% endif %}
+            </div>
+
+            <p><strong>Current Medications:</strong></p>
+            <div style="padding: 0.75rem; background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 0;">
+                {% if patient.current_medications %}
+                    <p style="margin: 0; white-space: pre-line;">{{ patient.current_medications }}</p>
+                {% else %}
+                    <p style="margin: 0; color: #6b7280;">No current medications recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <h3 class="card-title">AI Health Insights</h3>
         <div class="ai-recommendations">
@@ -99,3 +135,4 @@
         </div>
     </div>
 </div>
+{% endblock %}

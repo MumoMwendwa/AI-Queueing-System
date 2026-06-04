@@ -2,15 +2,20 @@
 
 from datetime import timedelta
 from functools import wraps
+from datetime import datetime
+from types import SimpleNamespace
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import viewsets
 
 from .models import Doctor, Patient, Queue, Notification, Department, QueueTicket # 👈 Make sure to import ALL necessary models
 from .serializers import DoctorSerializer, PatientSerializer, QueueSerializer, NotificationSerializer, QueueTicketSerializer
+from utils.helpers import calculate_age, generate_random_string
+from django.db import IntegrityError
 
 
 def get_doctor_profile(request):
@@ -86,8 +91,8 @@ def home(request):
     """
     Retrieves and prepares data for the main queue display.
     """
-    # get a patient first
-    patient = Patient.objects.first() or None  # Replace with actual logic to get the relevant patient 
+    # Home is a public landing page; do not force-select or create a patient record.
+    patient = None
     # 1. Fetch all departments
     departments = Department.objects.all()
     
@@ -114,13 +119,6 @@ def home(request):
             'current_ticket': in_consultation_ticket, # This is the main piece of data you needed!
             'waiting_list': waiting_tickets,
         })
-        patient = Patient.objects.first() 
-        if not patient:
-            patient = Patient.objects.create(
-                first_name="Eren",
-                last_name="Yeager",
-                patient_id="123456"
-            )
     # 4. Create the context dictionary
     context = {
         'departments': department_data,
@@ -132,11 +130,173 @@ def home(request):
     return render(request, 'base.html', context)
 
 def patient_dashboard(request, patient_id):
-    patient = Patient.objects.get(pk=patient_id)
-    # Logic for patient dashboard view
-    return render(request, 'patient/dashboard.html', {'patient': patient})
+    patient = get_object_or_404(Patient.objects.select_related('user'), pk=patient_id)
+
+    # Attach convenient attributes expected by templates
+    patient.first_name = getattr(patient.user, 'first_name', '')
+    patient.last_name = getattr(patient.user, 'last_name', '')
+    patient.email = getattr(patient.user, 'email', '')
+
+    # Virtual card info
+    try:
+        vc = patient.virtual_card
+        patient.virtual_card_id = getattr(vc, 'virtual_card_id', '')
+        patient.qr_code = getattr(vc, 'qr_code', None)
+    except ObjectDoesNotExist:
+        patient.virtual_card_id = ''
+        patient.qr_code = None
+
+    # Find current ticket for this patient (waiting or in_consultation)
+    current_ticket = (
+        QueueTicket.objects.filter(patient=patient, status__in=['waiting', 'in_consultation'])
+        .select_related('department', 'doctor')
+        .order_by('-check_in_time')
+        .first()
+    )
+
+    # Provide a safe fallback so template doesn't error
+    if not current_ticket:
+        current_ticket = SimpleNamespace(
+            department=SimpleNamespace(name='Not in queue'),
+            doctor=None,
+            ticket_number='N/A',
+            estimated_wait_time=0,
+        )
+
+    return render(request, 'patient/dashboard.html', {
+        'patient': patient,
+        'current_ticket': current_ticket,
+    })
 def patient_register(request):
-    # Logic for patient registration view
+    # Handle POST registration
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        date_of_birth = request.POST.get('date_of_birth', '').strip()
+        blood_type = request.POST.get('blood_type', '').strip()
+        allergies = request.POST.get('allergies', '').strip()
+        address = request.POST.get('address', '').strip()
+        emergency_contact = request.POST.get('emergency_contact', '').strip()
+        relationship = request.POST.get('relationship', '').strip()
+        existing_conditions = request.POST.get('existing_conditions', '').strip()
+        current_medications = request.POST.get('current_medications', '').strip()
+        symptoms = request.POST.get('symptoms', '').strip()
+
+        medical_history_parts = [
+            f"Symptoms: {symptoms}" if symptoms else "",
+            f"Existing Conditions: {existing_conditions}" if existing_conditions else "",
+            f"Current Medications: {current_medications}" if current_medications else "",
+        ]
+        medical_history = "\n".join(part for part in medical_history_parts if part)
+
+        # Determine username
+        username = email or phone or f'user_{User.objects.count() + 1}'
+
+        try:
+            user, created = User.objects.get_or_create(username=username, defaults={
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+            })
+        except IntegrityError:
+            # Race or unique constraint issue — try to load existing user, otherwise create with a safe unique username
+            try:
+                user = User.objects.get(username=username)
+                created = False
+            except User.DoesNotExist:
+                safe_username = f"{username}_{generate_random_string(6)}"
+                user = User.objects.create(username=safe_username, first_name=first_name, last_name=last_name, email=email)
+                user.set_unusable_password()
+                user.save()
+                created = True
+
+        user.first_name = first_name
+        user.last_name = last_name
+        if email:
+            user.email = email
+        user.save()
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        parsed_dob = None
+        parsed_age = None
+        if date_of_birth:
+            try:
+                parsed_dob = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+                parsed_age = calculate_age(parsed_dob)
+            except ValueError:
+                parsed_dob = None
+
+        # Create or get patient profile
+        patient, created_patient = Patient.objects.get_or_create(user=user, defaults={
+            'date_of_birth': parsed_dob,
+            'age': parsed_age,
+            'blood_type': blood_type,
+            'allergies': allergies,
+            'address': address,
+            'contact_number': phone,
+            'emergency_contact': emergency_contact,
+            'emergency_contact_relationship': relationship,
+            'symptoms': symptoms,
+            'existing_conditions': existing_conditions,
+            'current_medications': current_medications,
+            'medical_history': medical_history,
+        })
+
+        # Update contact and symptoms if provided
+        updated = False
+        if parsed_dob and patient.date_of_birth != parsed_dob:
+            patient.date_of_birth = parsed_dob
+            patient.age = parsed_age
+            updated = True
+        if blood_type and patient.blood_type != blood_type:
+            patient.blood_type = blood_type
+            updated = True
+        if allergies and patient.allergies != allergies:
+            patient.allergies = allergies
+            updated = True
+        if address and patient.address != address:
+            patient.address = address
+            updated = True
+        if phone and (not patient.contact_number or patient.contact_number != phone):
+            patient.contact_number = phone
+            updated = True
+        if emergency_contact and patient.emergency_contact != emergency_contact:
+            patient.emergency_contact = emergency_contact
+            updated = True
+        if relationship and patient.emergency_contact_relationship != relationship:
+            patient.emergency_contact_relationship = relationship
+            updated = True
+        if symptoms and (not patient.symptoms or patient.symptoms != symptoms):
+            patient.symptoms = symptoms
+            updated = True
+        if existing_conditions and patient.existing_conditions != existing_conditions:
+            patient.existing_conditions = existing_conditions
+            updated = True
+        if current_medications and patient.current_medications != current_medications:
+            patient.current_medications = current_medications
+            updated = True
+        if medical_history and patient.medical_history != medical_history:
+            patient.medical_history = medical_history
+            updated = True
+        if updated:
+            patient.save()
+
+        # Ensure a VirtualCard exists
+        try:
+            _ = patient.virtual_card
+        except ObjectDoesNotExist:
+            from .models import VirtualCard
+            vc = VirtualCard(patient=patient)
+            vc.save()
+
+        # Use explicit path to avoid any reverse/name issues
+        return redirect(f'/patient/{patient.pk}/dashboard/')
+
     return render(request, 'patient/register.html')
 def patient_virtual_card(request, patient_id):
     patient = Patient.objects.get(pk=patient_id)

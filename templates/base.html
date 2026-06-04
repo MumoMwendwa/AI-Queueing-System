@@ -21,11 +21,10 @@
     <!-- Navigation -->
     <nav class="nav-bar">
         <ul class="nav-items">
+            <li><a href="{% url 'patient_register' %}">Register</a></li>
             {% if patient %}
             <li><a href="{% url 'patient_dashboard' patient.id %}">Dashboard</a></li>
             <li><a href="{% url 'patient_virtual_card' patient.id %}">Virtual Card</a></li>
-            {% else %}
-            <li><a href="{% url 'patient_register' %}">Register</a></li>
             {% endif %}
         </ul>
     </nav>

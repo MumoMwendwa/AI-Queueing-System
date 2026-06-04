@@ -23,3 +23,16 @@ A Django-based intelligent queue management system for hospitals with AI-powered
 4. Install dependencies: `pip install -r requirements.txt`
 5. Run migrations: `python manage.py migrate`
 6. Start server: `python manage.py runserver`
+
+
+
+python manage.py shell
+
+Below is for doctor 
+from django.contrib.auth.models import User
+from queue_app.models import Doctor
+u = User.objects.create_user('drsmith', password='Secret123', first_name='John', last_name='Smith', email='dr@example.com')
+Doctor.objects.create(user=u, specialization='General', room_number='101')
+
+to open admin, 
+python manage.py runserver then in the http://127.0.0.1:8000/admin/

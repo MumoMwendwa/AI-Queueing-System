@@ -30,10 +30,17 @@ class Patient(models.Model):
     # Link each patient to a user account that he/she can use to login.
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
     # Patients information 
+    date_of_birth = models.DateField(null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)  # Age of the patient
+    blood_type = models.CharField(max_length=3, blank=True, null=True)
+    allergies = models.TextField(blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
     contact_number = models.CharField(max_length=15, blank=True, null=True)  # Contact number of the patient
     emergency_contact = models.CharField(max_length=100, blank=True, null=True)  # Emergency contact details of the patient
+    emergency_contact_relationship = models.CharField(max_length=100, blank=True, null=True)
     medical_history = models.TextField(blank=True, null=True)  # Medical history of the patient if they have ever been treated before and details about the treatement.
+    existing_conditions = models.TextField(blank=True, null=True)
+    current_medications = models.TextField(blank=True, null=True)
     # Gender choices for the consistency of data 
     gender = models.CharField(
         max_length=10,

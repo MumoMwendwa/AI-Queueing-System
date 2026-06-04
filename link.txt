@@ -29,3 +29,10 @@ Doctor profile created: False
 >>> print("Doctor:", doctor)
 Doctor: Dr. John Doe - General Medicine
 >>> exit()
+
+
+from django.contrib.auth.models import User
+from queue_app.models import Doctor
+u = User.objects.create_user('drsmith', password='Secret123', first_name='John', last_name='Smith', email='dr@example.com')
+Doctor.objects.create(user=u, specialization='General', room_number='101')
+exit()
