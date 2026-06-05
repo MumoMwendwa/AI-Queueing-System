@@ -23,10 +23,7 @@
                     <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Not provided" }}</p>
                     <p><strong>Allergies:</strong> {{ patient.allergies|default:"None reported" }}</p>
                     <p><strong>Phone:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
-                    <p><strong>Email:</strong> {{ patient.email|default:"Not provided" }}</p>
-                    <p><strong>Address:</strong> {{ patient.address|default:"Not provided" }}</p>
-                    <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact|default:"Not provided" }}</p>
-                    <p><strong>Relationship:</strong> {{ patient.emergency_contact_relationship|default:"Not provided" }}</p>
+                   
                     <div class="qr-container mt-4">
                         {% if patient.qr_code %}
                             <img src="{{ patient.qr_code.url }}" alt="QR Code" class="qr-code">

@@ -36,7 +36,7 @@
                 <h3 style="margin-bottom: 1rem; color: var(--dark-gray);">{{ patient.first_name }} {{ patient.last_name }}</h3>
                 
                 <div style="text-align: left; margin-bottom: 1rem;">
-                    <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+                    <p><strong>Phone Number:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
                     <p><strong>Virtual Card ID:</strong> {{ patient.virtual_card_id }}</p>
                     <p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
                     <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Not specified" }}</p>
@@ -61,6 +61,18 @@
                         <strong>In case of emergency, show this card to medical staff</strong>
                     </p>
                 </div>
+            </div>
+        </div>
+
+        <div class="print-patient-info" aria-hidden="true" style="display: none;">
+            <h3 style="margin-bottom: 1rem; color: var(--dark-gray);">{{ patient.first_name }} {{ patient.last_name }}</h3>
+            <div style="text-align: left; margin-bottom: 1rem;">
+                <p><strong>Phone Number:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
+                <p><strong>Virtual Card ID:</strong> {{ patient.virtual_card_id }}</p>
+                <p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
+                <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Not specified" }}</p>
+                <p><strong>Allergies:</strong> {{ patient.allergies|default:"None" }}</p>
+                <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact }}</p>
             </div>
         </div>
 
@@ -165,10 +177,10 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
                     <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
-                    <p><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
                     <p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
                 </div>
                 <div>
+                    <p><strong>Phone Number:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
                     <p><strong>Blood Type:</strong> {{ patient.blood_type|default:"Unknown" }}</p>
                     <p><strong>Allergies:</strong> {{ patient.allergies|default:"None" }}</p>
                     <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact }}</p>
@@ -185,7 +197,51 @@
 
 <script>
     function printCard() {
-        window.print();
+        const printContent = document.querySelector('.print-patient-info');
+
+        if (!printContent) {
+            alert('Patient information is not available to print.');
+            return;
+        }
+
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+
+        if (!printWindow) {
+            alert('Pop-up blocked. Please allow pop-ups to print the card.');
+            return;
+        }
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Patient Information</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 24px;
+                            color: #111827;
+                            background: white;
+                        }
+                        h3 {
+                            margin-top: 0;
+                        }
+                        p {
+                            margin: 0 0 0.5rem 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${printContent.innerHTML}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
     }
 
     function downloadCard() {
@@ -230,16 +286,8 @@
 </script>
 
 <style>
-    @media print {
-        .no-print, .btn, .dashboard-grid, .card:not(:first-child) {
-            display: none !important;
-        }
-        .virtual-card {
-            box-shadow: none !important;
-            border: 2px solid #000 !important;
-            background: white !important;
-            color: black !important;
-        }
+    .print-patient-info {
+        display: none;
     }
 </style>
 {% endblock %}

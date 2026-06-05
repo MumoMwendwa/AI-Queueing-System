@@ -36,3 +36,11 @@ from queue_app.models import Doctor
 u = User.objects.create_user('drsmith', password='Secret123', first_name='John', last_name='Smith', email='dr@example.com')
 Doctor.objects.create(user=u, specialization='General', room_number='101')
 exit()
+
+
+##For admin login & access
+# create a new user
+python manage.py createsuperuser
+# change password for admin. 
+pyhton manage.py changepassword username eg admin
+

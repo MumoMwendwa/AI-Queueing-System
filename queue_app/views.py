@@ -299,8 +299,21 @@ def patient_register(request):
 
     return render(request, 'patient/register.html')
 def patient_virtual_card(request, patient_id):
-    patient = Patient.objects.get(pk=patient_id)
-    # Logic for patient virtual card view
+    patient = get_object_or_404(Patient.objects.select_related('user'), pk=patient_id)
+
+    # Attach the user-facing fields the template expects.
+    patient.first_name = getattr(patient.user, 'first_name', '')
+    patient.last_name = getattr(patient.user, 'last_name', '')
+    patient.email = getattr(patient.user, 'email', '')
+
+    try:
+        vc = patient.virtual_card
+        patient.virtual_card_id = getattr(vc, 'virtual_card_id', '')
+        patient.qr_code = getattr(vc, 'qr_code', None)
+    except ObjectDoesNotExist:
+        patient.virtual_card_id = ''
+        patient.qr_code = None
+
     return render(request, 'patient/virtual_card.html', {'patient': patient})
 
 
