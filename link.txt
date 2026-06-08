@@ -8,7 +8,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> # 1) Create user (or get existing one)
 >>> user, created = User.objects.get_or_create(
 ...     username="doc1",
-...     defaults={"email": "doc1@example.com"}
+...     defaults={"email": "doc1@gmail.com"}
 ... )
 >>> if created:
 ...     user.set_password("password123")
@@ -44,3 +44,16 @@ python manage.py createsuperuser
 # change password for admin. 
 pyhton manage.py changepassword username eg admin
 
+
+
+# Database for Postgresql 
+#since work station is github codespaces I cannot install Postgresql in HP machine. 
+'default': {
+        'ENGINE': 'django.db.backends.postgresql', # Changed from 'django.db.backends.sqlite3' to PostgreSQL
+        'NAME': env('DB_NAME', default='mydb'),
+        'USER': env('DB_USER', default='queue_user'),
+        'PASSWORD': env('DB_PASSWORD', default='0512'),
+        'HOST': env('DB_HOST', default='localhost'),
+        'PORT': env('DB_PORT', default='5432'),
+        'CONN_MAX_AGE': 600,
+}

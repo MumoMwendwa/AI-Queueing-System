@@ -109,3 +109,7 @@ AI_MODELS_ROOT = PROJECT_ROOT / 'ai_models'
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 os.makedirs(STATIC_ROOT, exist_ok=True)
 os.makedirs(AI_MODELS_ROOT, exist_ok=True)
+
+# Time Zones
+USE_TZ = True
+TIME_ZONE = 'Africa/Nairobi'

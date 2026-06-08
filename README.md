@@ -31,7 +31,7 @@ python manage.py shell
 Below is for doctor 
 from django.contrib.auth.models import User
 from queue_app.models import Doctor
-u = User.objects.create_user('drsmith', password='Secret123', first_name='John', last_name='Smith', email='dr@example.com')
+user = User.objects.create_user('drsmith', password='Smith123', first_name='John', last_name='Smith', email='dr01@gmail.com')
 Doctor.objects.create(user=u, specialization='General', room_number='101')
 
 to open admin, 
