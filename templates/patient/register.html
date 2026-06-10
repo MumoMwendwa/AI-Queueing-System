@@ -4,229 +4,791 @@
 {% block title %}Patient Registration - AI Queueing Clinic System{% endblock %}
 
 {% block content %}
-<div class="patient-dashboard">
-    <div class="card">
-        <div class="card-header text-center">
-            <h1 class="card-title">👤 New Patient Registration</h1>
-            <p>Welcome! Let's get you registered in our system quickly and easily.</p>
+<style>
+    /* ── Layout ── */
+    .reg-shell {
+        max-width: 780px;
+        margin: 2.5rem auto;
+        padding: 0 1rem 4rem;
+    }
+
+    /* ── Page header ── */
+    .reg-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    .reg-header .eyebrow {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #1a6fa8;
+        background: #e8f3fb;
+        padding: 4px 12px;
+        border-radius: 99px;
+        margin-bottom: 0.75rem;
+    }
+    .reg-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0d1b2a;
+        margin-bottom: 0.4rem;
+    }
+    .reg-header p {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    /* ── Progress steps ── */
+    .reg-steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 2.5rem;
+    }
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        position: relative;
+    }
+    .step-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #9ca3af;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        position: relative;
+        z-index: 1;
+    }
+    .step.active .step-dot {
+        background: #1a6fa8;
+        color: #fff;
+        box-shadow: 0 0 0 4px #cce3f5;
+    }
+    .step.done .step-dot {
+        background: #16a34a;
+        color: #fff;
+    }
+    .step-label {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #9ca3af;
+        white-space: nowrap;
+    }
+    .step.active .step-label { color: #1a6fa8; }
+    .step.done .step-label { color: #16a34a; }
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e5e7eb;
+        margin: 0 6px;
+        margin-bottom: 18px;
+        min-width: 40px;
+    }
+    .step-line.done { background: #16a34a; }
+
+    /* ── Section cards ── */
+    .reg-section {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        margin-bottom: 1.25rem;
+        display: none;
+    }
+    .reg-section.active { display: block; }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0d1b2a;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title .icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: #e8f3fb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+    .section-sub {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+        padding-left: 36px;
+    }
+
+    /* ── Field grid ── */
+    .field-row {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .field-row.two { grid-template-columns: 1fr 1fr; }
+    .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .field-row.one { grid-template-columns: 1fr; }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .field label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #374151;
+        letter-spacing: 0.01em;
+    }
+
+    .field label .req {
+        color: #e05d5d;
+        margin-left: 2px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+        padding: 9px 12px;
+        font-size: 0.875rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fafafa;
+        color: #111827;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        width: 100%;
+        font-family: inherit;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+        border-color: #1a6fa8;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(26,111,168,0.1);
+    }
+
+    .field input.error,
+    .field select.error {
+        border-color: #e05d5d;
+        background: #fff8f8;
+    }
+
+    .field textarea { min-height: 90px; resize: vertical; }
+
+    .field-hint {
+        font-size: 0.72rem;
+        color: #9ca3af;
+        margin-top: 1px;
+    }
+
+    .field-error {
+        font-size: 0.72rem;
+        color: #e05d5d;
+        margin-top: 1px;
+        display: none;
+    }
+
+    /* ── Password strength ── */
+    .password-wrap { position: relative; }
+    .pwd-toggle {
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        padding: 0;
+        line-height: 1;
+    }
+    .pwd-toggle:hover { color: #374151; }
+
+    .strength-bar {
+        height: 4px;
+        border-radius: 99px;
+        background: #e5e7eb;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+    .strength-fill {
+        height: 100%;
+        border-radius: 99px;
+        width: 0%;
+        transition: width 0.3s, background 0.3s;
+    }
+    .strength-label {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        margin-top: 3px;
+    }
+
+    /* ── AI triage card ── */
+    .ai-triage-card {
+        display: none;
+        background: linear-gradient(135deg, #f0f7ff 0%, #e8f3fb 100%);
+        border: 1px solid #b8d9f4;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-top: 0.75rem;
+    }
+    .ai-triage-card h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #0d4f7c;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ai-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #1a6fa8;
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        padding: 2px 8px;
+        border-radius: 99px;
+    }
+
+    /* Priority badges */
+    .priority-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 3px 10px;
+        border-radius: 99px;
+        text-transform: uppercase;
+    }
+    .priority-emergency { background: #fee2e2; color: #b91c1c; }
+    .priority-urgent    { background: #fef3c7; color: #b45309; }
+    .priority-routine   { background: #dcfce7; color: #15803d; }
+
+    /* ── Consent ── */
+    .consent-box {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 0.5rem;
+    }
+    .consent-box input[type="checkbox"] {
+        margin-top: 3px;
+        width: 16px;
+        height: 16px;
+        accent-color: #1a6fa8;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .consent-box span {
+        font-size: 0.8rem;
+        color: #4b5563;
+        line-height: 1.6;
+    }
+    .consent-box a { color: #1a6fa8; }
+
+    /* ── Nav buttons ── */
+    .reg-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1.75rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .btn-back {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        background: transparent;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-back:hover { background: #f9fafb; color: #374151; }
+
+    .btn-next {
+        padding: 10px 24px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background: #1a6fa8;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-next:hover { background: #155c8f; }
+
+    .btn-submit {
+        padding: 11px 28px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: #16a34a;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-submit:hover { background: #15803d; }
+
+    .btn-analyze {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        background: #e8f3fb;
+        color: #1a6fa8;
+        border: 1px solid #b8d9f4;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: background 0.15s;
+        margin-top: 0.5rem;
+    }
+    .btn-analyze:hover { background: #cce3f5; }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Login link ── */
+    .login-nudge {
+        text-align: center;
+        font-size: 0.82rem;
+        color: #6b7280;
+        margin-top: 1.5rem;
+    }
+    .login-nudge a { color: #1a6fa8; font-weight: 500; }
+
+    /* ── Django messages ── */
+    .msg-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        color: #dc2626;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 580px) {
+        .field-row.two, .field-row.three { grid-template-columns: 1fr; }
+        .reg-section { padding: 1.25rem; }
+        .reg-steps { gap: 0; }
+        .step-line { min-width: 20px; }
+    }
+</style>
+
+<div class="reg-shell">
+
+    <!-- Header -->
+    <div class="reg-header">
+        <span class="eyebrow">New Patient</span>
+        <h1>Create your account</h1>
+        <p>You'll get a virtual card and queue access immediately after registering.</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="reg-steps">
+        <div class="step active" id="step-ind-1">
+            <div class="step-dot">1</div>
+            <div class="step-label">Personal</div>
+        </div>
+        <div class="step-line" id="line-1"></div>
+        <div class="step" id="step-ind-2">
+            <div class="step-dot">2</div>
+            <div class="step-label">Medical</div>
+        </div>
+        <div class="step-line" id="line-2"></div>
+        <div class="step" id="step-ind-3">
+            <div class="step-dot">3</div>
+            <div class="step-label">Account</div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="msg-error">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'patient_register' %}" id="reg-form">
+        {% csrf_token %}
+
+        <!-- ── STEP 1: Personal Info ── -->
+        <div class="reg-section active" id="section-1">
+            <div class="section-title">
+                <span class="icon">👤</span> Personal Information
+            </div>
+            <p class="section-sub">We use this to create your patient record and virtual card.</p>
+
+            <div class="field-row two">
+                <div class="field">
+                    <label>First Name <span class="req">*</span></label>
+                    <input type="text" name="first_name" placeholder="Jane" required>
+                </div>
+                <div class="field">
+                    <label>Last Name <span class="req">*</span></label>
+                    <input type="text" name="last_name" placeholder="Mwangi" required>
+                </div>
+            </div>
+
+            <div class="field-row two">
+                <div class="field">
+                    <label>Date of Birth <span class="req">*</span></label>
+                    <input type="date" name="date_of_birth" required>
+                </div>
+                <div class="field">
+                    <label>Phone Number <span class="req">*</span></label>
+                    <input type="tel" name="phone" placeholder="0712 345 678" required>
+                </div>
+            </div>
+
+            <div class="field-row one">
+                <div class="field">
+                    <label>Email Address <span class="req">*</span></label>
+                    <input type="email" name="email" placeholder="jane.mwangi@example.com" required>
+                </div>
+            </div>
+
+            <div class="field-row one">
+                <div class="field">
+                    <label>Home Address <span class="req">*</span></label>
+                    <textarea name="address" placeholder="e.g. Westlands, Nairobi" required></textarea>
+                </div>
+            </div>
+
+            <div class="field-row two">
+                <div class="field">
+                    <label>Emergency Contact Name <span class="req">*</span></label>
+                    <input type="text" name="emergency_contact" placeholder="Full name + phone number" required>
+                </div>
+                <div class="field">
+                    <label>Relationship <span class="req">*</span></label>
+                    <input type="text" name="relationship" placeholder="Spouse, Parent, Friend…" required>
+                </div>
+            </div>
+
+            <div class="reg-nav">
+                <span></span>
+                <button type="button" class="btn-next" onclick="goToStep(2)">
+                    Medical Info →
+                </button>
+            </div>
         </div>
 
-        <!-- Registration Form -->
-        <form method="POST" action="{% url 'patient_register' %}" style="max-width: 600px; margin: 0 auto;">
-            {% csrf_token %}
-            
-            <!-- Personal Information -->
-            <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem; color: var(--baby-blue-dark);">Personal Information</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name *</label>
-                        <input type="text" name="first_name" required style="width: 100%;" 
-                               placeholder="Enter your first name">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name *</label>
-                        <input type="text" name="last_name" required style="width: 100%;" 
-                               placeholder="Enter your last name">
-                    </div>
-                </div>
+        <!-- ── STEP 2: Medical Info ── -->
+        <div class="reg-section" id="section-2">
+            <div class="section-title">
+                <span class="icon">🩺</span> Medical Information
+            </div>
+            <p class="section-sub">Helps our AI triage system route you to the right department.</p>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Date of Birth *</label>
-                        <input type="date" name="date_of_birth" required style="width: 100%;">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Phone Number *</label>
-                        <input type="tel" name="phone" required style="width: 100%;" 
-                               placeholder="+254/ 07xx xx">
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email Address *</label>
-                    <input type="email" name="email" required style="width: 100%;" 
-                           placeholder="your.email@example.com">
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Home Address *</label>
-                    <textarea name="address" required style="width: 100%; min-height: 80px;" 
-                              placeholder="Enter your complete address"></textarea>
+            <div class="field-row one">
+                <div class="field">
+                    <label>Describe Your Symptoms <span class="req">*</span></label>
+                    <textarea name="symptoms" id="symptoms-input" placeholder="Describe when your symptoms started, how severe they are, and anything else that feels relevant." required style="min-height: 110px;"></textarea>
+                    <button type="button" class="btn-analyze" id="analyze-btn" onclick="analyzeSymptoms()">
+                        🤖 Analyse with AI
+                    </button>
                 </div>
             </div>
 
-            <!-- Emergency Contact -->
-            <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem; color: var(--baby-blue-dark);">Emergency Contact</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Contact Name *</label>
-                        <input type="text" name="emergency_contact" required style="width: 100%;" 
-                               placeholder="Full name of emergency contact and Number">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Relationship *</label>
-                        <input type="text" name="relationship" required style="width: 100%;" 
-                               placeholder="Spouse, Parent, Friend, etc.">
-                    </div>
+            <!-- AI Triage Result -->
+            <div class="ai-triage-card" id="ai-triage-section">
+                <h4>
+                    <span class="ai-badge">✦ AI</span> Triage Assessment
+                </h4>
+                <div id="triage-result"></div>
+            </div>
+
+            <div class="field-row two">
+                <div class="field">
+                    <label>Blood Type</label>
+                    <select name="blood_type">
+                        <option value="">Select…</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Known Allergies</label>
+                    <input type="text" name="allergies" placeholder="Penicillin, Peanuts… (or leave blank)">
                 </div>
             </div>
 
-            <!-- Medical Information -->
-            <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem; color: var(--baby-blue-dark);">Medical Information</h3>
-                
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
-                        Describe Your Symptoms *
-                    </label>
-                    <textarea name="symptoms" required style="width: 100%; min-height: 120px;" 
-                              placeholder="Please describe your symptoms in detail. Include when they started, severity, and any other relevant information."></textarea>
-                </div>
-
-                <!-- AI Triage Analysis Section -->
-                <div id="ai-triage-section" style="display: none; margin-bottom: 1rem;">
-                    <div class="ai-recommendations">
-                        <h4 style="margin-bottom: 0.5rem;">🤖 AI Triage Analysis</h4>
-                        <div id="triage-result">
-                            <!-- AI analysis will appear here -->
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Blood Type</label>
-                        <select name="blood_type" style="width: 100%;">
-                            <option value="">Select blood type</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Known Allergies</label>
-                        <input type="text" name="allergies" style="width: 100%;" 
-                               placeholder="List any allergies (if none, leave blank)">
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Existing Medical Conditions</label>
-                    <input type="text" name="existing_conditions" style="width: 100%;" 
-                           placeholder="Any chronic conditions or previous diagnoses">
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Current Medications</label>
-                    <input type="text" name="current_medications" style="width: 100%;" 
-                           placeholder="List medications you're currently taking">
+            <div class="field-row one">
+                <div class="field">
+                    <label>Existing Medical Conditions</label>
+                    <input type="text" name="existing_conditions" placeholder="Diabetes, Hypertension, Asthma…">
                 </div>
             </div>
 
-            <!-- Terms and Submit -->
-            <div style="margin-bottom: 2rem;">
-                <label style="display: flex; align-items: start; gap: 0.5rem;">
-                    <input type="checkbox" required style="margin-top: 0.25rem;">
-                    <span>
-                        I agree to the <a href="#terms" style="color: var(--baby-blue-dark);">terms and conditions</a> 
-                        and consent to the use of my medical information for treatment purposes. 
-                        I understand that AI will be used to assist in triage and treatment recommendations.
-                    </span>
-                </label>
+            <div class="field-row one">
+                <div class="field">
+                    <label>Current Medications</label>
+                    <input type="text" name="current_medications" placeholder="Metformin 500mg, Amlodipine 5mg…">
+                </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div style="display: flex; gap: 1rem; justify-content: center;">
-                <button type="button" class="btn" onclick="analyzeSymptoms()" id="analyze-btn">
-                    🔍 Analyze Symptoms with AI
-                </button>
-                <button type="submit" class="btn btn-primary" id="submit-btn">
-                    ✅ Complete Registration & Get Virtual Card
+            <div class="reg-nav">
+                <button type="button" class="btn-back" onclick="goToStep(1)">← Back</button>
+                <button type="button" class="btn-next" onclick="goToStep(3)">
+                    Set Password →
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <!-- ── STEP 3: Account / Password ── -->
+        <div class="reg-section" id="section-3">
+            <div class="section-title">
+                <span class="icon">🔒</span> Secure Your Account
+            </div>
+            <p class="section-sub">Set a password so you can sign back in later to check your queue.</p>
+
+            <div class="field-row one">
+                <div class="field">
+                    <label>Password <span class="req">*</span></label>
+                    <div class="password-wrap">
+                        <input type="password" name="password" id="password" placeholder="Create a strong password"
+                               required oninput="checkStrength(this.value)" autocomplete="new-password">
+                        <button type="button" class="pwd-toggle" onclick="togglePwd('password', this)">👁</button>
+                    </div>
+                    <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+                    <div class="strength-label" id="strength-label">Enter a password to see its strength</div>
+                    <div class="field-error" id="pwd-error">Password must be at least 8 characters.</div>
+                </div>
+            </div>
+
+            <div class="field-row one">
+                <div class="field">
+                    <label>Confirm Password <span class="req">*</span></label>
+                    <div class="password-wrap">
+                        <input type="password" name="confirm_password" id="confirm_password"
+                               placeholder="Re-enter your password" required
+                               oninput="checkMatch()" autocomplete="new-password">
+                        <button type="button" class="pwd-toggle" onclick="togglePwd('confirm_password', this)">👁</button>
+                    </div>
+                    <div class="field-error" id="match-error">Passwords do not match.</div>
+                </div>
+            </div>
+
+            <!-- Consent -->
+            <div class="consent-box">
+                <input type="checkbox" id="consent" required>
+                <span>
+                    I agree to the <a href="#terms">terms and conditions</a> and consent to the use of my
+                    medical information for treatment purposes. I understand that AI will assist in triage
+                    and treatment recommendations.
+                </span>
+            </div>
+
+            <div class="reg-nav">
+                <button type="button" class="btn-back" onclick="goToStep(2)">← Back</button>
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    ✅ Register &amp; Get Virtual Card
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <p class="login-nudge">Already have an account? <a href="{% url 'login' %}">Sign in here</a></p>
 </div>
 
 <script>
-    function analyzeSymptoms() {
-        const symptomsText = document.querySelector('textarea[name="symptoms"]').value;
-        const analyzeBtn = document.getElementById('analyze-btn');
-        
-        if (!symptomsText.trim()) {
-            alert('Please describe your symptoms first.');
-            return;
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function goToStep(n) {
+        // Basic validation before advancing
+        if (n > currentStep && !validateStep(currentStep)) return;
+
+        document.getElementById('section-' + currentStep).classList.remove('active');
+        document.getElementById('section-' + n).classList.add('active');
+
+        // Update step indicators
+        for (let i = 1; i <= totalSteps; i++) {
+            const ind = document.getElementById('step-ind-' + i);
+            ind.classList.remove('active', 'done');
+            if (i < n) ind.classList.add('done');
+            else if (i === n) ind.classList.add('active');
+        }
+        for (let i = 1; i < totalSteps; i++) {
+            const line = document.getElementById('line-' + i);
+            line.classList.toggle('done', i < n);
         }
 
-        // Show loading state
-        analyzeBtn.innerHTML = '🔄 Analyzing...';
-        analyzeBtn.disabled = true;
+        // Update dot content for done steps
+        for (let i = 1; i <= totalSteps; i++) {
+            const dot = document.querySelector('#step-ind-' + i + ' .step-dot');
+            dot.textContent = i < n ? '✓' : i;
+        }
 
-        // Call AI triage API
+        currentStep = n;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep(step) {
+        const section = document.getElementById('section-' + step);
+        const required = section.querySelectorAll('[required]');
+        let ok = true;
+        required.forEach(el => {
+            if (!el.value.trim()) {
+                el.classList.add('error');
+                el.addEventListener('input', () => el.classList.remove('error'), { once: true });
+                ok = false;
+            }
+        });
+        if (!ok) {
+            const first = section.querySelector('.error');
+            if (first) first.focus();
+        }
+        return ok;
+    }
+
+    /* Password toggle */
+    function togglePwd(id, btn) {
+        const input = document.getElementById(id);
+        const isText = input.type === 'text';
+        input.type = isText ? 'password' : 'text';
+        btn.textContent = isText ? '👁' : '🙈';
+    }
+
+    /* Strength meter */
+    function checkStrength(val) {
+        const fill = document.getElementById('strength-fill');
+        const label = document.getElementById('strength-label');
+        const error = document.getElementById('pwd-error');
+
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        const levels = [
+            { pct: '0%',   color: '#e5e7eb', text: 'Enter a password to see its strength' },
+            { pct: '25%',  color: '#e05d5d', text: 'Weak — keep going' },
+            { pct: '50%',  color: '#f59e0b', text: 'Fair — add uppercase or numbers' },
+            { pct: '75%',  color: '#3b82f6', text: 'Good — almost there' },
+            { pct: '100%', color: '#16a34a', text: 'Strong password ✓' },
+        ];
+
+        const level = val.length === 0 ? levels[0] : levels[score];
+        fill.style.width = level.pct;
+        fill.style.background = level.color;
+        label.textContent = level.text;
+        label.style.color = level.color === '#e5e7eb' ? '#9ca3af' : level.color;
+
+        error.style.display = val.length > 0 && val.length < 8 ? 'block' : 'none';
+        checkMatch();
+    }
+
+    /* Confirm match */
+    function checkMatch() {
+        const pwd = document.getElementById('password').value;
+        const conf = document.getElementById('confirm_password').value;
+        const err = document.getElementById('match-error');
+        err.style.display = conf.length > 0 && pwd !== conf ? 'block' : 'none';
+    }
+
+    /* Final submit guard */
+    document.getElementById('reg-form').addEventListener('submit', function(e) {
+        const pwd = document.getElementById('password').value;
+        const conf = document.getElementById('confirm_password').value;
+        if (pwd !== conf) {
+            e.preventDefault();
+            document.getElementById('match-error').style.display = 'block';
+            document.getElementById('confirm_password').focus();
+            return;
+        }
+        if (pwd.length < 8) {
+            e.preventDefault();
+            document.getElementById('pwd-error').style.display = 'block';
+            document.getElementById('password').focus();
+        }
+    });
+
+    /* AI triage */
+    function analyzeSymptoms() {
+        const symptomsText = document.getElementById('symptoms-input').value;
+        const btn = document.getElementById('analyze-btn');
+        if (!symptomsText.trim()) { alert('Please describe your symptoms first.'); return; }
+
+        btn.innerHTML = '🔄 Analysing…';
+        btn.disabled = true;
+
         fetch('/api/ai/triage/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
             body: JSON.stringify({ symptoms: symptomsText })
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
-            // Show AI analysis results
-            const triageSection = document.getElementById('ai-triage-section');
-            const triageResult = document.getElementById('triage-result');
-            
-            triageResult.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                    <span class="priority-badge priority-${data.priority_level}">
-                        ${data.priority_level.toUpperCase()}
-                    </span>
-                    <span>Confidence: ${Math.round(data.confidence * 100)}%</span>
+            document.getElementById('triage-result').innerHTML = `
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.6rem;flex-wrap:wrap;">
+                    <span class="priority-badge priority-${data.priority_level}">${data.priority_level.toUpperCase()}</span>
+                    <span style="font-size:0.8rem;color:#4b5563;">Confidence: <strong>${Math.round(data.confidence * 100)}%</strong></span>
                 </div>
-                <p><strong>Suggested Department:</strong> ${data.suggested_department}</p>
-                <p><strong>Instructions:</strong> ${data.patient_instructions}</p>
-                <p><strong>Estimated Attention:</strong> ${data.estimated_attention_time}</p>
+                <p style="font-size:0.82rem;color:#1e3a5f;margin-bottom:4px;"><strong>Department:</strong> ${data.suggested_department}</p>
+                <p style="font-size:0.82rem;color:#1e3a5f;margin-bottom:4px;"><strong>Instructions:</strong> ${data.patient_instructions}</p>
+                <p style="font-size:0.82rem;color:#1e3a5f;"><strong>Est. attention:</strong> ${data.estimated_attention_time}</p>
             `;
-            
-            triageSection.style.display = 'block';
-            
-            // Reset button
-            analyzeBtn.innerHTML = '✅ Symptoms Analyzed';
-            setTimeout(() => {
-                analyzeBtn.innerHTML = '🔍 Re-analyze Symptoms';
-                analyzeBtn.disabled = false;
-            }, 2000);
+            document.getElementById('ai-triage-section').style.display = 'block';
+            btn.innerHTML = '✅ Re-analyse';
+            btn.disabled = false;
         })
-        .catch(error => {
-            console.error('Error analyzing symptoms:', error);
-            analyzeBtn.innerHTML = '🔍 Analyze Symptoms with AI';
-            analyzeBtn.disabled = false;
-            alert('Unable to analyze symptoms at this time. Please proceed with registration.');
+        .catch(() => {
+            btn.innerHTML = '🤖 Analyse with AI';
+            btn.disabled = false;
         });
     }
 
-    // Auto-analyze symptoms when user stops typing
+    // Auto-analyse after 2s of inactivity
     let typingTimer;
-    const symptomsInput = document.querySelector('textarea[name="symptoms"]');
-    
-    symptomsInput.addEventListener('input', () => {
+    document.getElementById('symptoms-input').addEventListener('input', () => {
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
-            if (symptomsInput.value.length > 20) {
-                analyzeSymptoms();
-            }
+            if (document.getElementById('symptoms-input').value.length > 20) analyzeSymptoms();
         }, 2000);
     });
-
 </script>
 {% endblock %}

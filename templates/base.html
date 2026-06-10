@@ -3,47 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AI Queueing Clinic System - Patient Portal{% endblock %}</title>
+    <title>{% block title %}AI Queueing Clinic System{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="patient-theme">
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <h1>🏥 AI Queueing Clinic System</h1>
-            <p>Patient Portal - Your Health, Our Priority</p>
-        </div>
-    </header>
+<body>
+    {% block content %}{% endblock %}
 
-    <!-- Navigation -->
-    <nav class="nav-bar">
-        <ul class="nav-items">
-            <li><a href="{% url 'patient_register' %}">Register</a></li>
-            {% if patient %}
-            <li><a href="{% url 'patient_dashboard' patient.id %}">Dashboard</a></li>
-            <li><a href="{% url 'patient_virtual_card' patient.id %}">Virtual Card</a></li>
-            {% endif %}
-        </ul>
-    </nav>
-    <!-- End Navigation -->
-   
-    <!-- Main Content -->
-    <main class="dashboard-container">
-        {% block content %}
-        <!-- Patient-specific content goes here -->
-        {% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="text-center p-4" style="background: var(--light-gray); border-top: 1px solid #e5e7eb;">
-        <p>&copy; AI Queueing Clinic System. Providing compassionate care through technology.</p>
-        <p>Emergency? Call <strong>911</strong> or approach any staff member immediately.</p>
-    </footer>
-
-    <!-- Scripts -->
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
 </body>

@@ -6,7 +6,8 @@ from queue_app import views as queue_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', queue_views.home, name='main_display'),
+    path('accounts/', include('django.contrib.auth.urls')),  # For login/logout
+    path('', include('queue_app.urls')),  # Include the URLs from the queue_app
 
     # Patient-related pages
     path('patient/<int:patient_id>/dashboard/', queue_views.patient_dashboard, name='patient_dashboard'),

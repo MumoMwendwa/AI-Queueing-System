@@ -8,11 +8,14 @@ from types import SimpleNamespace
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib import messages
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework import viewsets
 
-from .models import Doctor, Patient, Queue, Notification, Department, QueueTicket # 👈 Make sure to import ALL necessary models
+from .models import Doctor, Patient, Queue, Notification, Department, QueueTicket
 from .serializers import DoctorSerializer, PatientSerializer, QueueSerializer, NotificationSerializer, QueueTicketSerializer
 from utils.helpers import calculate_age, generate_random_string
 from django.db import IntegrityError
@@ -87,57 +90,129 @@ def _doctor_base_context(doctor):
         'response_rate': int((total_notifications - unread_count) / total_notifications * 100) if total_notifications else 100,
     }
 
-def home(request):
-    """
-    Retrieves and prepares data for the main queue display.
-    """
-    # Home is a public landing page; do not force-select or create a patient record.
-    patient = None
-    # 1. Fetch all departments
-    departments = Department.objects.all()
-    
-    # 2. Prepare data structure to hold departments and their currently served ticket
-    department_data = []
-    
-    for department in departments:
-        # 3. Perform the necessary database query (the logic from your broken template line)
-        
-        # Find the first ticket for this department that is 'in_consultation'
-        # Note: 'queueticket_set' is the reverse relationship name for ForeignKey from QueueTicket to Department.
 
+def home(request):
+    patient = None
+    departments = Department.objects.all()
+    department_data = []
+
+    for department in departments:
         in_consultation_ticket = department.queueticket_set.filter(
             status='in_consultation'
-        ).first() 
+        ).first()
 
-        # Find any other tickets waiting, ordered by entry time/number
         waiting_tickets = department.queueticket_set.filter(
-            status='waiting' # Assuming you have a 'waiting' status
-        ).order_by('ticket_number')[:5] # Limit to the next 5 waiting tickets
+            status='waiting'
+        ).order_by('ticket_number')[:5]
 
         department_data.append({
             'name': department.name,
-            'current_ticket': in_consultation_ticket, # This is the main piece of data you needed!
+            'current_ticket': in_consultation_ticket,
             'waiting_list': waiting_tickets,
         })
-    # 4. Create the context dictionary
-    context = {
+
+    return render(request, 'home.html', {
         'departments': department_data,
-        # You can add other global variables here
-        'system_title': "AI Queueing Display",
-        'patient' : patient, 
-    }
-    
-    return render(request, 'base.html', context)
+        'system_title': "AI Queueing Display"
+
+    })
+
+
+# ──────────────────────────────────────────
+# AUTH VIEWS
+# ──────────────────────────────────────────
+
+def login_page(request):
+    """Main login page — redirects already-authenticated users straight to their dashboard."""
+    if request.user.is_authenticated:
+        if get_doctor_profile(request):
+            return redirect('doctor_dashboard')
+        # Try to find a patient linked to this user
+        try:
+            patient = request.user.patient
+            return redirect('patient_dashboard', patient_id=patient.pk)
+        except ObjectDoesNotExist:
+            pass
+    role = request.GET.get('role', 'patient')
+    return render(request, 'login.html', {'role': role})
+
+
+def patient_login(request):
+    """Handles patient login form submission."""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+
+        # Django's default auth uses username; look up the user by email first
+        try:
+            username = User.objects.get(email=email).username
+        except User.DoesNotExist:
+            username = email  # fallback — try email as username
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            try:
+                patient = user.patient
+                return redirect('patient_dashboard', patient_id=patient.pk)
+            except ObjectDoesNotExist:
+                messages.error(request, 'No patient profile found for this account.')
+        else:
+            messages.error(request, 'Invalid email or password. Please try again.')
+
+    return redirect(reverse('login') + '?role=patient')
+
+
+def doctor_login(request):
+    """Handles doctor login form submission."""
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        # Support login by email as well as staff ID / username
+        if '@' in username:
+            try:
+                username = User.objects.get(email=username).username
+            except User.DoesNotExist:
+                pass
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and get_doctor_profile_for_user(user):
+            login(request, user)
+            return redirect('doctor_dashboard')
+        else:
+            messages.error(request, 'Invalid credentials or not a doctor account.')
+
+    return redirect(reverse('login') + '?role=doctor')
+
+
+def logout_view(request):
+    """Logs out any user and returns to the login page."""
+    logout(request)
+    return redirect('login')
+
+
+def get_doctor_profile_for_user(user):
+    """Helper used during login before the request object is fully set up."""
+    try:
+        return user.doctor_profile
+    except ObjectDoesNotExist:
+        return None
+
+
+# ──────────────────────────────────────────
+# PATIENT VIEWS
+# ──────────────────────────────────────────
 
 def patient_dashboard(request, patient_id):
     patient = get_object_or_404(Patient.objects.select_related('user'), pk=patient_id)
 
-    # Attach convenient attributes expected by templates
     patient.first_name = getattr(patient.user, 'first_name', '')
     patient.last_name = getattr(patient.user, 'last_name', '')
     patient.email = getattr(patient.user, 'email', '')
 
-    # Virtual card info
     try:
         vc = patient.virtual_card
         patient.virtual_card_id = getattr(vc, 'virtual_card_id', '')
@@ -146,7 +221,6 @@ def patient_dashboard(request, patient_id):
         patient.virtual_card_id = ''
         patient.qr_code = None
 
-    # Find current ticket for this patient (waiting or in_consultation)
     current_ticket = (
         QueueTicket.objects.filter(patient=patient, status__in=['waiting', 'in_consultation'])
         .select_related('department', 'doctor')
@@ -154,7 +228,6 @@ def patient_dashboard(request, patient_id):
         .first()
     )
 
-    # Provide a safe fallback so template doesn't error
     if not current_ticket:
         current_ticket = SimpleNamespace(
             department=SimpleNamespace(name='Not in queue'),
@@ -167,9 +240,22 @@ def patient_dashboard(request, patient_id):
         'patient': patient,
         'current_ticket': current_ticket,
     })
+
+
 def patient_register(request):
-    # Handle POST registration
     if request.method == 'POST':
+        # Validating Passwords. 
+        password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match. Please try again.')
+            return render(request, 'patient/register.html')
+        
+        if len(password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long.')
+            return render(request, 'patient/register.html')
+        
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
         email = request.POST.get('email', '').strip()
@@ -183,6 +269,7 @@ def patient_register(request):
         existing_conditions = request.POST.get('existing_conditions', '').strip()
         current_medications = request.POST.get('current_medications', '').strip()
         symptoms = request.POST.get('symptoms', '').strip()
+        password = request.POST.get('password', '').strip()
 
         medical_history_parts = [
             f"Symptoms: {symptoms}" if symptoms else "",
@@ -191,7 +278,6 @@ def patient_register(request):
         ]
         medical_history = "\n".join(part for part in medical_history_parts if part)
 
-        # Determine username
         username = email or phone or f'user_{User.objects.count() + 1}'
 
         try:
@@ -201,7 +287,6 @@ def patient_register(request):
                 'email': email,
             })
         except IntegrityError:
-            # Race or unique constraint issue — try to load existing user, otherwise create with a safe unique username
             try:
                 user = User.objects.get(username=username)
                 created = False
@@ -216,11 +301,14 @@ def patient_register(request):
         user.last_name = last_name
         if email:
             user.email = email
-        user.save()
 
-        if created:
+        # Set a real password so the patient can log in next time
+        if password:
+            user.set_password(password)
+        elif created:
             user.set_unusable_password()
-            user.save()
+
+        user.save()
 
         parsed_dob = None
         parsed_age = None
@@ -231,7 +319,6 @@ def patient_register(request):
             except ValueError:
                 parsed_dob = None
 
-        # Create or get patient profile
         patient, created_patient = Patient.objects.get_or_create(user=user, defaults={
             'date_of_birth': parsed_dob,
             'age': parsed_age,
@@ -247,7 +334,6 @@ def patient_register(request):
             'medical_history': medical_history,
         })
 
-        # Update contact and symptoms if provided
         updated = False
         if parsed_dob and patient.date_of_birth != parsed_dob:
             patient.date_of_birth = parsed_dob
@@ -286,7 +372,6 @@ def patient_register(request):
         if updated:
             patient.save()
 
-        # Ensure a VirtualCard exists
         try:
             _ = patient.virtual_card
         except ObjectDoesNotExist:
@@ -294,14 +379,20 @@ def patient_register(request):
             vc = VirtualCard(patient=patient)
             vc.save()
 
-        # Use explicit path to avoid any reverse/name issues
+        # Log the new patient in automatically after registration
+        if password and created:
+            user = authenticate(request, username=username, password=password)
+            if user:
+                login(request, user)
+
         return redirect(f'/patient/{patient.pk}/dashboard/')
 
     return render(request, 'patient/register.html')
+
+
 def patient_virtual_card(request, patient_id):
     patient = get_object_or_404(Patient.objects.select_related('user'), pk=patient_id)
 
-    # Attach the user-facing fields the template expects.
     patient.first_name = getattr(patient.user, 'first_name', '')
     patient.last_name = getattr(patient.user, 'last_name', '')
     patient.email = getattr(patient.user, 'email', '')
@@ -316,6 +407,10 @@ def patient_virtual_card(request, patient_id):
 
     return render(request, 'patient/virtual_card.html', {'patient': patient})
 
+
+# ──────────────────────────────────────────
+# DOCTOR VIEWS
+# ──────────────────────────────────────────
 
 @doctor_required
 def doctor_dashboard(request):
@@ -385,11 +480,14 @@ def doctor_patient_detail(request, patient_id):
     })
 
 
-# Your ViewSets remain unchanged:
+# ──────────────────────────────────────────
+# VIEWSETS
+# ──────────────────────────────────────────
+
 class DoctorViewSet(viewsets.ModelViewSet):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
-  
+
 class PatientViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
@@ -397,9 +495,11 @@ class PatientViewSet(viewsets.ModelViewSet):
 class QueueViewSet(viewsets.ModelViewSet):
     queryset = Queue.objects.all()
     serializer_class = QueueSerializer
+
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+
 class QueueTicketViewSet(viewsets.ModelViewSet):
     queryset = QueueTicket.objects.all()
     serializer_class = QueueTicketSerializer

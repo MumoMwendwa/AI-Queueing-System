@@ -44,6 +44,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / 'templates',
+            Path(__file__).resolve().parent.parent / 'templates'
            ],   # Look in the root templates folder
         'APP_DIRS': True,
         'OPTIONS': {
