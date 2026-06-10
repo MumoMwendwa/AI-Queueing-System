@@ -12,6 +12,9 @@ from .views import (
     doctor_dashboard,
     doctor_notifications,
     doctor_patient_detail,
+    doctor_register,
+    login_view,
+    logout_view,
     home,
 )
 from . import ai_views
@@ -30,7 +33,12 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', home, name='home'),
 
+    # Authentication
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+
     # Doctor portal
+    path('doctor/register/', doctor_register, name='doctor_register'),
     path('doctor/', doctor_dashboard, name='doctor_home'),
     path('doctor/dashboard/', doctor_dashboard, name='doctor_dashboard'),
     path('doctor/notifications/', doctor_notifications, name='doctor_notifications'),

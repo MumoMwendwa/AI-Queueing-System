@@ -9,6 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework import viewsets
 
@@ -28,9 +31,21 @@ def get_doctor_profile(request):
         return None
 
 
+def get_patient_profile(request):
+    if not request.user.is_authenticated:
+        return None
+    try:
+        return request.user.patient_profile
+    except ObjectDoesNotExist:
+        return None
+
+
 def doctor_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('login')}?next={request.path}")
+
         doctor = get_doctor_profile(request)
         if doctor is None:
             return HttpResponseForbidden("Doctor access only.")
@@ -39,6 +54,111 @@ def doctor_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
+
+def _post_login_redirect(user):
+    """Send a freshly logged-in user to the page that fits their role."""
+    try:
+        user.doctor_profile
+        return redirect('doctor_dashboard')
+    except ObjectDoesNotExist:
+        pass
+
+    try:
+        patient = user.patient_profile
+        return redirect('patient_dashboard', patient_id=patient.pk)
+    except ObjectDoesNotExist:
+        pass
+
+    if user.is_staff:
+        return redirect('/admin/')
+    return redirect('home')
+
+
+def login_view(request):
+    """Unified login page for doctors and patients."""
+    if request.user.is_authenticated:
+        return _post_login_redirect(request.user)
+
+    next_url = request.POST.get('next') or request.GET.get('next', '')
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            if next_url:
+                return redirect(next_url)
+            return _post_login_redirect(user)
+        messages.error(request, 'Invalid username or password. Please try again.')
+
+    return render(request, 'registration/login.html', {'next': next_url})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
+def doctor_register(request):
+    """Self-service registration for doctors (creates a User + Doctor profile)."""
+    if request.user.is_authenticated:
+        return _post_login_redirect(request.user)
+
+    form_data = {}
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        specialization = request.POST.get('specialization', '').strip()
+        room_number = request.POST.get('room_number', '').strip()
+
+        form_data = {
+            'username': username,
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'specialization': specialization,
+            'room_number': room_number,
+        }
+
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        if not password:
+            errors.append('Password is required.')
+        if password and password != confirm_password:
+            errors.append('Passwords do not match.')
+        if not specialization:
+            errors.append('Specialization is required.')
+        if username and User.objects.filter(username=username).exists():
+            errors.append('That username is already taken.')
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+            )
+            Doctor.objects.create(
+                user=user,
+                specialization=specialization,
+                room_number=room_number or None,
+            )
+            login(request, user)
+            messages.success(request, 'Doctor account created successfully.')
+            return redirect('doctor_dashboard')
+
+    return render(request, 'doctor/register.html', {'form_data': form_data})
 
 
 def _priority_label(score):
@@ -183,6 +303,7 @@ def patient_register(request):
         existing_conditions = request.POST.get('existing_conditions', '').strip()
         current_medications = request.POST.get('current_medications', '').strip()
         symptoms = request.POST.get('symptoms', '').strip()
+        password = request.POST.get('password', '')
 
         medical_history_parts = [
             f"Symptoms: {symptoms}" if symptoms else "",
@@ -218,7 +339,12 @@ def patient_register(request):
             user.email = email
         user.save()
 
-        if created:
+        # Set a usable password when supplied so patients can log in later;
+        # otherwise keep the account password-less (e.g. staff-assisted sign-up).
+        if password:
+            user.set_password(password)
+            user.save()
+        elif created:
             user.set_unusable_password()
             user.save()
 
@@ -293,6 +419,12 @@ def patient_register(request):
             from .models import VirtualCard
             vc = VirtualCard(patient=patient)
             vc.save()
+
+        # Log the patient in automatically when they set a password.
+        if password and not request.user.is_authenticated:
+            auth_user = authenticate(request, username=user.username, password=password)
+            if auth_user is not None:
+                login(request, auth_user)
 
         # Use explicit path to avoid any reverse/name issues
         return redirect(f'/patient/{patient.pk}/dashboard/')

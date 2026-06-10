@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Doctor Registration - AI Queueing Clinic System{% endblock %}
+
+{% block content %}
+<div class="patient-dashboard">
+    <div class="card" style="max-width: 600px; margin: 2rem auto;">
+        <div class="card-header text-center">
+            <h1 class="card-title">🩺 Doctor Registration</h1>
+            <p>Create your doctor account to access the doctor portal.</p>
+        </div>
+
+        {% if messages %}
+        <div style="margin-bottom: 1rem;">
+            {% for message in messages %}
+            <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+                        background: {% if message.tags == 'success' %}#dcfce7{% else %}#fee2e2{% endif %};
+                        color: {% if message.tags == 'success' %}#166534{% else %}#991b1b{% endif %};">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'doctor_register' %}" style="max-width: 480px; margin: 0 auto;">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">First Name</label>
+                    <input type="text" name="first_name" style="width: 100%;"
+                           value="{{ form_data.first_name }}" placeholder="John">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Last Name</label>
+                    <input type="text" name="last_name" style="width: 100%;"
+                           value="{{ form_data.last_name }}" placeholder="Doe">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Email</label>
+                <input type="email" name="email" style="width: 100%;"
+                       value="{{ form_data.email }}" placeholder="dr.john@example.com">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Specialization *</label>
+                    <input type="text" name="specialization" required style="width: 100%;"
+                           value="{{ form_data.specialization }}" placeholder="e.g. Cardiology">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Room Number</label>
+                    <input type="text" name="room_number" style="width: 100%;"
+                           value="{{ form_data.room_number }}" placeholder="101">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username *</label>
+                <input type="text" name="username" required style="width: 100%;"
+                       value="{{ form_data.username }}" placeholder="Choose a username">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password *</label>
+                    <input type="password" name="password" required style="width: 100%;"
+                           placeholder="Create a password">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Confirm Password *</label>
+                    <input type="password" name="confirm_password" required style="width: 100%;"
+                           placeholder="Re-enter password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                    style="width: 100%; padding: 0.75rem; background: #2563eb; color: #fff;
+                           border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Create Doctor Account
+            </button>
+        </form>
+
+        <div class="text-center" style="margin-top: 1.5rem;">
+            <p>Already have an account? <a href="{% url 'login' %}" style="color: #2563eb; font-weight: 600;">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

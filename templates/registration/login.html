@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login - AI Queueing Clinic System{% endblock %}
+
+{% block content %}
+<div class="patient-dashboard">
+    <div class="card" style="max-width: 460px; margin: 2rem auto;">
+        <div class="card-header text-center">
+            <h1 class="card-title">🔐 Login</h1>
+            <p>Welcome back! Sign in to access your portal.</p>
+        </div>
+
+        {% if messages %}
+        <div style="margin-bottom: 1rem;">
+            {% for message in messages %}
+            <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+                        background: {% if message.tags == 'success' %}#dcfce7{% else %}#fee2e2{% endif %};
+                        color: {% if message.tags == 'success' %}#166534{% else %}#991b1b{% endif %};">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}" style="max-width: 360px; margin: 0 auto;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
+                <input type="text" name="username" required autofocus style="width: 100%;"
+                       placeholder="Enter your username">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+                <input type="password" name="password" required style="width: 100%;"
+                       placeholder="Enter your password">
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                    style="width: 100%; padding: 0.75rem; background: #2563eb; color: #fff;
+                           border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Login
+            </button>
+        </form>
+
+        <div class="text-center" style="margin-top: 1.5rem;">
+            <p style="margin-bottom: 0.75rem;">New user? Create an account:</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{% url 'patient_register' %}" class="btn"
+                   style="padding: 0.6rem 1.2rem; background: #e0f2fe; color: #075985;
+                          border-radius: 8px; text-decoration: none; font-weight: 600;">
+                    Register as Patient
+                </a>
+                <a href="{% url 'doctor_register' %}" class="btn"
+                   style="padding: 0.6rem 1.2rem; background: #ede9fe; color: #5b21b6;
+                          border-radius: 8px; text-decoration: none; font-weight: 600;">
+                    Register as Doctor
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
