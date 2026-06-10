@@ -26,6 +26,11 @@
             <li><a href="{% url 'patient_dashboard' patient.id %}">Dashboard</a></li>
             <li><a href="{% url 'patient_virtual_card' patient.id %}">Virtual Card</a></li>
             {% endif %}
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+            {% else %}
+            <li><a href="{% url 'login' %}">Login</a></li>
+            {% endif %}
         </ul>
     </nav>
     <!-- End Navigation -->
