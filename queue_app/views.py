@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import viewsets
 
+
 from .models import Doctor, Patient, Queue, Notification, Department, QueueTicket
 from .serializers import DoctorSerializer, PatientSerializer, QueueSerializer, NotificationSerializer, QueueTicketSerializer
 from utils.helpers import calculate_age, generate_random_string
@@ -124,6 +125,11 @@ def home(request):
 
 def login_page(request):
     """Main login page — redirects already-authenticated users straight to their dashboard."""
+    if request.user.is_authenticated:
+        # Superusers/staff go straight to admin, no profile lookup
+        if request.user.is_superuser or request.user.is_staff:
+            return redirect('admin:index')
+        
     if request.user.is_authenticated:
         if get_doctor_profile(request):
             return redirect('doctor_dashboard')
@@ -270,6 +276,18 @@ def patient_register(request):
         current_medications = request.POST.get('current_medications', '').strip()
         symptoms = request.POST.get('symptoms', '').strip()
         password = request.POST.get('password', '').strip()
+     
+
+        
+#Read hidden flespopulated by AI triage
+suggested_department = request.POST.get('suggested_department', '').strip()
+priority_level       = request.POST.get('prioroty_level'), 'routine').strip()
+priority_score       = request.POST.get('priority_score', '0.3').strip()
+try:
+        priority_score = float(priority_score)
+except ValueError:
+        priority_score = 0.3
+
 
         medical_history_parts = [
             f"Symptoms: {symptoms}" if symptoms else "",
@@ -379,6 +397,54 @@ def patient_register(request):
             vc = VirtualCard(patient=patient)
             vc.save()
 
+
+        # Assign Dept and Doctor
+        from .models import Department, QueueTicket
+        from django.db.models import Count, Q
+
+        # Match department from AI suggestion, or fallback to General Medicine
+        department = None
+        if suggested_department:
+            department = Department.objects.filter(
+                name__icontains=suggested_department
+            ).first()
+        if not department:
+            department Department.objects.filter(
+                name__icontains='General Medicine'
+            ).first()
+
+    # Find doctor with shortest queue in that department
+    assigned_doctor = None
+    if department:
+        assigned_doctor = Doctor.objects.filter(
+            department=department
+        ).annotate( 
+            queue_length=Count(
+                'ticket_set',
+                filter=Q(queueticket__status='waiting', 'in_consultation'])
+
+            )
+        ).order_by('queue_length').first()
+
+        # Fall back to any doctor if department match fails
+        if not assigned_doctor:
+            assigned_doctor = Doctor.objects.annotate(
+                queue_length=Count(
+                    'ticket_set',
+                    filter=Q(queueticket__status='waiting', 'in_consultation')
+                )
+            ).order_by('queue_length').first()
+
+
+            # Create the ticket
+        if assigned_doctor:
+            Ticket.objects.create(
+                patient=patient,
+                doctor=assigned_doctor,
+                department=department
+                ai_priority_score=priority_score,
+                status='waiting',
+            )
         # Log the new patient in automatically after registration
         if password and created:
             user = authenticate(request, username=username, password=password)

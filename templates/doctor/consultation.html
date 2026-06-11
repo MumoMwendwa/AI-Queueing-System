@@ -8,84 +8,391 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body.doctor-theme {
+            font-family: 'Inter', sans-serif;
+            background: #f4f6f9;
+            color: #111827;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.875rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .header-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: #0F6E56;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .header-brand h1 { font-size: 16px; font-weight: 600; color: #111827; }
+        .header-brand p  { font-size: 12px; color: #6b7280; margin-top: 1px; }
+        .header-actions  { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+        /* ── Buttons ── */
+        .btn {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+        .btn-primary:hover { background: #0C447C; border-color: #0C447C; }
+        .btn-success { background: #0F6E56; color: #fff; border-color: #0F6E56; }
+        .btn-success:hover { background: #085041; border-color: #085041; }
+        .btn-warning { background: #fff; color: #92400e; border-color: #fcd34d; }
+        .btn-warning:hover { background: #fffbeb; }
+        .btn-danger { background: #fff; color: #991b1b; border-color: #fca5a5; }
+        .btn-danger:hover { background: #fef2f2; }
+
+        /* ── Layout ── */
+        .consultation-screen {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 1.5rem 1.75rem;
+        }
+        .consult-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            align-items: start;
+        }
+        @media (max-width: 820px) {
+            .consult-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .card:last-child { margin-bottom: 0; }
+        .card-title { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+
+        /* ── Patient info card (full width) ── */
+        .patient-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+            grid-column: 1 / -1;
+        }
+        .patient-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.125rem;
+        }
+        .patient-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .patient-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: #185FA5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .patient-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .meta-item { font-size: 13px; }
+        .meta-label { color: #6b7280; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .meta-value { color: #111827; font-weight: 500; }
+
+        /* ── AI triage banner ── */
+        .triage-banner {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.875rem 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .triage-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #e0e7ff;
+            color: #3730a3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+        .triage-content { flex: 1; min-width: 160px; }
+        .triage-content p { font-size: 13px; color: #374151; margin-top: 4px; line-height: 1.5; }
+
+        /* ── Priority badges ── */
+        .priority-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 6px;
+            display: inline-block;
+            letter-spacing: 0.03em;
+        }
+        .priority-emergency { background: #fee2e2; color: #991b1b; }
+        .priority-urgent    { background: #fef3c7; color: #92400e; }
+        .priority-routine   { background: #dbeafe; color: #1e40af; }
+
+        /* ── Form fields ── */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            color: #111827;
+            resize: vertical;
+            transition: border-color 0.15s;
+            background: #fff;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #185FA5;
+            box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.08);
+        }
+        textarea::placeholder { color: #9ca3af; }
+
+        /* ── Status rows ── */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 13px;
+        }
+        .status-row:last-child { border-bottom: none; }
+        .status-row span { color: #6b7280; }
+        .status-row strong { color: #111827; font-weight: 500; }
+
+        /* ── Section label ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #9ca3af;
+            margin-bottom: 0.75rem;
+        }
+
+        /* ── Divider ── */
+        .divider { border: none; border-top: 1px solid #f3f4f6; margin: 1rem 0; }
+
+        /* ── Form action row ── */
+        .form-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.125rem; }
+    </style>
 </head>
 <body class="doctor-theme">
+
     <header class="header">
-        <div style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div class="header-brand">
+            <div class="header-brand-icon">
+                <i class="ti ti-stethoscope" aria-hidden="true"></i>
+            </div>
             <div>
-                <h1>🏥 Consultation Room</h1>
-                <p>Dr. {{ doctor_display_name }} - {{ doctor.specialization }}</p>
+                <h1>Consultation room</h1>
+                <p>Dr. {{ doctor_display_name }} &mdash; {{ doctor.specialization }}</p>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <a href="{% url 'doctor_dashboard' %}" class="btn">Back to Dashboard</a>
-                <button class="btn btn-primary">Save Progress</button>
-                <button class="btn btn-success">Complete Consultation</button>
-            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'doctor_dashboard' %}" class="btn">
+                <i class="ti ti-arrow-left" aria-hidden="true"></i> Dashboard
+            </a>
+            <button class="btn btn-primary">
+                <i class="ti ti-device-floppy" aria-hidden="true"></i> Save progress
+            </button>
+            <button class="btn btn-success">
+                <i class="ti ti-circle-check" aria-hidden="true"></i> Complete consultation
+            </button>
         </div>
     </header>
 
     <div class="consultation-screen">
-        <div class="dashboard-grid">
-            <div class="patient-details">
-                <h2 style="margin-bottom: 1rem;">Patient Information</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <p><strong>Name:</strong> {{ patient.user.get_full_name }}</p>
-                        <p><strong>Age:</strong> {{ patient_age }}</p>
-                        <p><strong>Contact:</strong> {{ patient.contact_number|default:"Not provided" }}</p>
+
+        <!-- Patient info — full width -->
+        <div class="patient-card">
+            <div class="patient-card-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="patient-avatar">
+                        <i class="ti ti-user" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <p><strong>Virtual Card:</strong> {{ virtual_card_id }}</p>
-                        <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact|default:"Not provided" }}</p>
-                        <p><strong>Ticket:</strong> {{ current_ticket.ticket_number }}</p>
+                        <div style="font-size: 16px; font-weight: 600; color: #111827;">{{ patient.user.get_full_name }}</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 1px;">Ticket {{ current_ticket.ticket_number }}</div>
                     </div>
                 </div>
+                <span class="priority-badge priority-{{ priority_label }}">{{ priority_label|capfirst }}</span>
+            </div>
 
-                <div class="ai-recommendations mt-4">
-                    <h4 style="margin-bottom: 0.5rem;">AI Triage Summary</h4>
-                    <div class="priority-badge priority-{{ priority_label }}">
-                        {{ priority_label|upper }}
-                    </div>
-                    <p style="margin-top: 0.5rem;"><strong>Symptoms / AI Notes:</strong> {{ symptom_summary }}</p>
-                    {% if current_ticket.department %}
-                    <p style="margin-top: 0.5rem;"><strong>Department:</strong> {{ current_ticket.department.name }}</p>
-                    {% endif %}
+            <div class="patient-meta-grid">
+                <div class="meta-item">
+                    <div class="meta-label">Age</div>
+                    <div class="meta-value">{{ patient_age }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Contact</div>
+                    <div class="meta-value">{{ patient.contact_number|default:"Not provided" }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Virtual card</div>
+                    <div class="meta-value">{{ virtual_card_id }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Emergency contact</div>
+                    <div class="meta-value">{{ patient.emergency_contact|default:"Not provided" }}</div>
+                </div>
+                {% if current_ticket.department %}
+                <div class="meta-item">
+                    <div class="meta-label">Department</div>
+                    <div class="meta-value">{{ current_ticket.department.name }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- AI Triage -->
+            <div class="triage-banner">
+                <div class="triage-icon">
+                    <i class="ti ti-robot" aria-hidden="true"></i>
+                </div>
+                <div class="triage-content">
+                    <div style="font-size: 13px; font-weight: 600; color: #111827;">AI triage summary</div>
+                    <p>{{ symptom_summary }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two column grid -->
+        <div class="consult-grid">
+
+            <!-- Consultation notes -->
+            <div class="card">
+                <div class="card-title">Consultation notes</div>
+
+                <div class="form-group">
+                    <label>Diagnosis</label>
+                    <textarea rows="4" placeholder="Enter diagnosis..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Treatment plan</label>
+                    <textarea rows="4" placeholder="Enter treatment plan..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Prescriptions</label>
+                    <textarea rows="3" placeholder="Enter prescriptions..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary">
+                        <i class="ti ti-sparkles" aria-hidden="true"></i> Generate AI summary
+                    </button>
+                    <button type="button" class="btn btn-warning">
+                        <i class="ti ti-flask" aria-hidden="true"></i> Request tests
+                    </button>
                 </div>
             </div>
 
-            <div class="card">
-                <h3 class="card-title">Consultation Notes</h3>
-                <form>
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Diagnosis</label>
-                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 100px;" placeholder="Enter diagnosis..."></textarea>
-                    </div>
+            <!-- Right column -->
+            <div>
 
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Treatment Plan</label>
-                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 100px;" placeholder="Enter treatment plan..."></textarea>
+                <!-- Next actions / status -->
+                <div class="card">
+                    <div class="card-title">Ticket status</div>
+                    <div>
+                        <div class="status-row">
+                            <span>Status</span>
+                            <strong>{{ current_ticket.status|capfirst }}</strong>
+                        </div>
+                        <div class="status-row">
+                            <span>Estimated wait</span>
+                            <strong>{{ current_ticket.estimated_wait_time|default:"Pending" }} min</strong>
+                        </div>
+                        <div class="status-row">
+                            <span>AI priority score</span>
+                            <strong>{{ current_ticket.ai_priority_score }}</strong>
+                        </div>
                     </div>
-
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Prescriptions</label>
-                        <textarea style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; min-height: 80px;" placeholder="Enter prescriptions..."></textarea>
-                    </div>
-
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-primary">Generate AI Summary</button>
-                        <button type="button" class="btn btn-warning">Request Tests</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="card">
-                <h3 class="card-title">Next Actions</h3>
-                <div style="padding: 1rem;">
-                    <p><strong>Current Status:</strong> {{ current_ticket.status|capfirst }}</p>
-                    <p><strong>Estimated Wait:</strong> {{ current_ticket.estimated_wait_time|default:"Pending" }} minutes</p>
-                    <p><strong>Priority Score:</strong> {{ current_ticket.ai_priority_score }}</p>
-                    <p><strong>Patient Symptom History:</strong> {{ patient.symptoms|default:"No symptom history recorded" }}</p>
                 </div>
+
+                <!-- Symptom history -->
+                <div class="card">
+                    <div class="card-title">Symptom history</div>
+                    <p style="font-size: 13px; color: #374151; line-height: 1.6;">
+                        {{ patient.symptoms|default:"No symptom history recorded." }}
+                    </p>
+                </div>
+
             </div>
         </div>
     </div>

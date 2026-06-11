@@ -8,101 +8,364 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body.doctor-theme {
+            font-family: 'Inter', sans-serif;
+            background: #f4f6f9;
+            color: #111827;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.875rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .header-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: #185FA5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .header-brand h1 { font-size: 16px; font-weight: 600; color: #111827; }
+        .header-brand p  { font-size: 12px; color: #6b7280; margin-top: 1px; }
+
+        /* ── Buttons ── */
+        .btn {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #374151;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+        .btn-primary:hover { background: #0C447C; border-color: #0C447C; }
+
+        /* ── Layout ── */
+        .dashboard-container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 1.5rem 1.75rem;
+        }
+        .page-grid {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+        @media (max-width: 820px) {
+            .page-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .card:last-child { margin-bottom: 0; }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.125rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .card-title { font-size: 15px; font-weight: 600; color: #111827; }
+
+        /* ── Unread badge ── */
+        .unread-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 99px;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* ── Notification list ── */
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .notification-item:last-child { border-bottom: none; }
+
+        .notif-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .notification-item.unread .notif-icon {
+            background: #dbeafe;
+            color: #185FA5;
+        }
+
+        .notification-content { flex: 1; min-width: 0; }
+        .notif-message {
+            font-size: 13px;
+            font-weight: 500;
+            color: #111827;
+            line-height: 1.5;
+        }
+        .notif-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .notif-time { font-size: 11px; color: #9ca3af; }
+        .notif-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 5px;
+        }
+        .status-unread { background: #dbeafe; color: #1e40af; }
+        .status-read   { background: #f3f4f6; color: #6b7280; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
+        }
+        .empty-state i   { font-size: 40px; display: block; margin-bottom: 0.75rem; opacity: 0.35; }
+        .empty-state h3  { font-size: 15px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+        .empty-state p   { font-size: 13px; }
+
+        /* ── Summary rows ── */
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 13px;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row span { color: #6b7280; }
+        .summary-row strong { color: #111827; font-weight: 600; }
+        .summary-row.highlight strong { color: #991b1b; }
+
+        /* ── Settings ── */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 13px;
+            color: #374151;
+        }
+        .setting-row:last-of-type { border-bottom: none; }
+        .setting-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .setting-label i { font-size: 16px; color: #9ca3af; }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: #d1d5db;
+            border-radius: 99px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.2s;
+        }
+        .toggle input:checked + .toggle-slider { background: #185FA5; }
+        .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+    </style>
 </head>
 <body class="doctor-theme">
+
     <header class="header">
-        <div style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div class="header-brand">
+            <div class="header-brand-icon">
+                <i class="ti ti-bell" aria-hidden="true"></i>
+            </div>
             <div>
-                <h1>🔔 Doctor Notifications</h1>
-                <p>Dr. {{ doctor_display_name }} - {{ doctor.specialization }}</p>
+                <h1>Notifications</h1>
+                <p>Dr. {{ doctor_display_name }} &mdash; {{ doctor.specialization }}</p>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <a href="{% url 'doctor_dashboard' %}" class="btn">Back to Dashboard</a>
-            </div>
+        </div>
+        <div>
+            <a href="{% url 'doctor_dashboard' %}" class="btn">
+                <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to dashboard
+            </a>
         </div>
     </header>
 
     <div class="dashboard-container">
-        <div class="dashboard-grid">
-            <div class="card" style="grid-column: 1 / -1;">
-                <div class="card-header" style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                    <h2 class="card-title">Your Notifications</h2>
-                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                        <span class="priority-badge priority-urgent">{{ unread_count }} Unread</span>
-                    </div>
+        <div class="page-grid">
+
+            <!-- Notifications list -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Your notifications</h2>
+                    {% if unread_count %}
+                    <span class="unread-badge">{{ unread_count }} unread</span>
+                    {% endif %}
                 </div>
 
                 <div class="notification-list">
                     {% for notification in notifications %}
                     <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
-                        <div style="font-size: 1.5rem;">🔔</div>
+                        <div class="notif-icon">
+                            <i class="ti ti-bell" aria-hidden="true"></i>
+                        </div>
                         <div class="notification-content">
-                            <div style="display: flex; justify-content: between; align-items: start; gap: 1rem; flex-wrap: wrap;">
-                                <div>
-                                    <strong>{{ notification.message }}</strong>
-                                    <div style="margin-top: 0.5rem;">
-                                        <span class="priority-badge priority-routine">{{ notification.is_read|yesno:"READ,UNREAD" }}</span>
-                                    </div>
-                                </div>
-                                <div class="notification-time">{{ notification.created_at|timesince }} ago</div>
+                            <div class="notif-message">{{ notification.message }}</div>
+                            <div class="notif-meta">
+                                <span class="notif-time">{{ notification.created_at|timesince }} ago</span>
+                                <span class="notif-status {% if notification.is_read %}status-read{% else %}status-unread{% endif %}">
+                                    {{ notification.is_read|yesno:"Read,Unread" }}
+                                </span>
                             </div>
                         </div>
                     </div>
                     {% empty %}
-                    <div style="text-align: center; padding: 3rem; color: #6b7280;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                        <h3>No notifications</h3>
+                    <div class="empty-state">
+                        <i class="ti ti-bell-off" aria-hidden="true"></i>
+                        <h3>No notifications yet</h3>
                         <p>New doctor alerts will appear here.</p>
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <div class="card">
-                <h3 class="card-title">Notification Summary</h3>
-                <div style="padding: 1rem;">
-                    <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
-                        <span>Today:</span>
-                        <strong>{{ today_count }} notifications</strong>
-                    </div>
-                    <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
-                        <span>This Week:</span>
-                        <strong>{{ week_count }} notifications</strong>
-                    </div>
-                    <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
-                        <span>Emergency Alerts:</span>
-                        <strong>{{ emergency_count }} alerts</strong>
-                    </div>
-                    <div style="display: flex; justify-content: between;">
-                        <span>Response Rate:</span>
-                        <strong>{{ response_rate }}%</strong>
-                    </div>
-                </div>
-            </div>
+            <!-- Sidebar -->
+            <div>
 
-            <div class="card">
-                <h3 class="card-title">Notification Settings</h3>
-                <div style="padding: 1rem;">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked>
-                            New Patient Arrivals
-                        </label>
+                <!-- Summary -->
+                <div class="card">
+                    <h3 class="card-title">Summary</h3>
+                    <div style="margin-top: 0.75rem;">
+                        <div class="summary-row">
+                            <span>Today</span>
+                            <strong>{{ today_count }} notifications</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>This week</span>
+                            <strong>{{ week_count }} notifications</strong>
+                        </div>
+                        <div class="summary-row highlight">
+                            <span>Emergency alerts</span>
+                            <strong>{{ emergency_count }} alerts</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Response rate</span>
+                            <strong>{{ response_rate }}%</strong>
+                        </div>
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked>
-                            Emergency Cases
-                        </label>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" checked>
-                            AI Recommendations
-                        </label>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Save Settings</button>
                 </div>
+
+                <!-- Settings -->
+                <div class="card">
+                    <h3 class="card-title">Notification settings</h3>
+                    <div style="margin-top: 0.75rem;">
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <i class="ti ti-users" aria-hidden="true"></i>
+                                New patient arrivals
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+                                Emergency cases
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <i class="ti ti-robot" aria-hidden="true"></i>
+                                AI recommendations
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                        <i class="ti ti-device-floppy" aria-hidden="true"></i> Save settings
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
